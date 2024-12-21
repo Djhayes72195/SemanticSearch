@@ -1,0 +1,26 @@
+{
+    "pct_correct": 1.0,
+    "incorrect_guesses": {},
+    "correct_guesses": {
+        "Sister chromatids separation during anaphase": {
+            "Answer": "test_data\\Mitosis\\Anaphase.md",
+            "OffBy": 0.17809385061264038
+        },
+        "Chromosome alignment at the metaphase plate": {
+            "Answer": "test_data\\Mitosis\\Metaphase.md",
+            "OffBy": 0.16087955236434937
+        },
+        "Nuclear envelope breakdown and spindle fiber attachment": {
+            "Answer": "test_data\\Mitosis\\Prometaphase.md",
+            "OffBy": 0.12857887148857117
+        },
+        "Chromosome condensation and spindle formation during prophase": {
+            "Answer": "test_data\\Mitosis\\Prophase.md",
+            "OffBy": 0.047473251819610596
+        },
+        "Chromosome decondensation and nuclear envelope reformation during telophase": {
+            "Answer": "test_data\\Mitosis\\Telophase.md",
+            "OffBy": 0.1763211488723755
+        }
+    }
+}
