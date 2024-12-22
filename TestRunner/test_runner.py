@@ -132,6 +132,11 @@ class Results:
     incorrect_guesses: dict = field(default_factory=dict)
     correct_guesses: dict = field(default_factory=dict)
 
+@dataclass
+class TestSettings:
+    encoding_strategy: str
+    annoy_branches: int
+
 from torch import nn
 cos = nn.CosineSimilarity(dim=1)
 path = Path("test_data\Mitosis")
