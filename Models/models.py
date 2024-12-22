@@ -26,7 +26,10 @@ class CorpusData:
 class QuestionAnswer:
 
     def __init__(self, test_data_path):
-        with open(Path('TestRunner\\test_config.json'), 'r') as f:
+        with open(Path('TestRunner\\question_answer.json'), 'r') as f:
             config_data = json.load(f)
-        self._test_set_config = config_data.get(str(test_data_path))
-        self.question_answer = self._test_set_config.get('question_answer')
+        self._question_answer = config_data.get(str(test_data_path))
+
+    @property
+    def question_answer(self):
+        return self._question_answer

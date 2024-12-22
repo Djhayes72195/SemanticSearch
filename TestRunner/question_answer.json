@@ -1,26 +1,34 @@
 {
-    "test_data\\Mitosis": {
-        "question_answer": [
+    "TestData\\Mitosis": [
             {
                 "query": "Sister chromatids separation during anaphase",
-                "answer": "test_data\\Mitosis\\Anaphase.md"
+                "answer": "Anaphase.md"
             },
             {
                 "query": "Chromosome alignment at the metaphase plate",
-                "answer": "test_data\\Mitosis\\Metaphase.md"
+                "answer": "Metaphase.md"
             },
             {
                 "query": "Nuclear envelope breakdown and spindle fiber attachment",
-                "answer": "test_data\\Mitosis\\Prometaphase.md"
+                "answer": "Prometaphase.md"
             },
             {
                 "query": "Chromosome condensation and spindle formation during prophase",
-                "answer": "test_data\\Mitosis\\Prophase.md"
+                "answer": "Prophase.md"
             },
             {
                 "query": "Chromosome decondensation and nuclear envelope reformation during telophase",
-                "answer": "test_data\\Mitosis\\Telophase.md"
+                "answer": "Telophase.md"
             }
-        ]
-    }
+        ],
+    "TestData\\work":  [
+            {
+                "query": "Grid server clean up",
+                "answer": "python upgrade.md"
+            },
+            {
+                "query": "Report with state",
+                "answer": "hedge effectiveness.md"
+            }
+    ]
 }

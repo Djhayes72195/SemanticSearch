@@ -3,6 +3,7 @@ import json
 from sentence_transformers import SentenceTransformer
 from pathlib import Path
 from torch import nn
+from annoy import AnnoyIndex
 import numpy as np
 from dataclasses import dataclass, asdict, field
 import json
@@ -31,7 +32,7 @@ class CorpusData:
 class QuestionAnswer:
 
     def __init__(self, test_data_path):
-        with open(Path('TestRunner\\test_config.json'), 'r') as f:
+        with open(Path('TestRunner\\question_answer.json'), 'r') as f:
             config_data = json.load(f)
         self._test_set_config = config_data.get(str(test_data_path))
         self.question_answer = self._test_set_config.get('question_answer')
@@ -39,17 +40,26 @@ class QuestionAnswer:
 
 class TestRunner:
 
-    def __init__(self, qa, corpus, similarity_calculator):
+    def __init__(self, qa, corpus, id_mapping, embedding_path, similarity_calculator=None):
         self._question_answer = qa.question_answer
         self._corpus = corpus
         self._embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
         self._document_embeddings = {}
+
+        # In case we don't want to use built in annoy similarity
         self._similarity_calculator = similarity_calculator
+
         self._results = Results()
-        x = 2
+        self._id_mapping = id_mapping
+
+        embedding_dim = 384
+        metric = 'angular'
+        self._annoy_index = AnnoyIndex(embedding_dim, metric) # TODO: Pass in args
+        self._annoy_index.load(
+            str(embedding_path)
+        )
 
     def run_test(self):
-        self._encode_corpus()
         is_correct_list = []
         for test_case in self._question_answer:
             query = test_case.get('query')
@@ -94,37 +104,23 @@ class TestRunner:
             json.dump(asdict(self._results), json_file, indent=4)
 
     def _analyze_answer(self, results, answer):
-        highest_to_lowest_scores = sorted(
-            results.items(),
-            key=lambda item: item[1],
-            reverse=True
-        )
-        guess = highest_to_lowest_scores[0][0]
+        # TODO: Left off here. Need to adapt to annoy output
+        guess = results[0][0]
         correct = guess == answer
         answer_score = results[answer]
-        guess_score = highest_to_lowest_scores[0][1]
+        guess_score = results[1][0]
         if correct:
-            off_by = guess_score - highest_to_lowest_scores[1][1]
+            off_by = results[1][1] - guess_score 
         else:
             off_by = guess_score - answer_score
         return correct, guess, off_by
 
     def _query_documents(self, embedded_query):
-        results = {}
-        for file, contents in self._document_embeddings.items():
-            similarity_score = cos(embedded_query, contents.unsqueeze(0))
-            results[file] = float(similarity_score)
+        results = self._annoy_index.get_nns_by_vector(
+            embedded_query, 5, include_distances=True
+        )
         return results
 
-    def _encode_corpus(self):
-        crawled_result_embeddings = self._embedding_model.encode(
-            list(self._corpus.data.values()), convert_to_tensor=True
-        )
-        self._document_embeddings = {
-            key: value for key, value in zip(
-            self._corpus.data.keys(), crawled_result_embeddings
-            )
-        }
 
 @dataclass
 class Results:
@@ -137,11 +133,4 @@ class TestSettings:
     encoding_strategy: str
     annoy_branches: int
 
-from torch import nn
-cos = nn.CosineSimilarity(dim=1)
-path = Path("test_data\Mitosis")
-qa = QuestionAnswer(path)
-corpus = CorpusData(path)
-tr = TestRunner(qa, corpus, cos)
-tr.run_test()
 
