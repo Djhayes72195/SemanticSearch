@@ -35,11 +35,25 @@ class EmbeddingGenerator:
         self._annoy_index.save(
             str(self.embedding_path)
         )
+        # TODO: Add a method to save off the id_mapping as well.
         print(f"Embeddings generated and saved at {self.embedding_path}.")
 
     def _encode_and_store(self, splits, path):
-        for txt in splits:
-            embedding = self._model.encode(txt)
-            self.id_mapping.update({self.id_counter: str(path)})
+        for split in splits:
+            embedding = self._generate_embedding(split)
+            split_metadata = self._extract_split_metadata(split, path)
+            self.id_mapping.update({self.id_counter: split_metadata})
             self._annoy_index.add_item(self.id_counter, embedding)
             self.id_counter += 1
+
+    def _generate_embedding(self, split):
+        split_txt = split['text']
+        embedding = self._model.encode(split_txt)
+        return embedding
+
+    def _extract_split_metadata(self, split, path):
+        return {
+            "location": str(path),
+            "char_range": split["range"],
+            "splitting_method": split["method"]
+        }

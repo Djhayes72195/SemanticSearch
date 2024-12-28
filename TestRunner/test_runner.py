@@ -105,8 +105,12 @@ class TestRunner:
 
     def _analyze_answer(self, results, answer):
         # TODO: Left off here. Need to adapt to annoy output
-        guess = results[0][0]
-        correct = guess == answer
+        guess_id = results[0][0]
+        guess_data = self._id_mapping[guess_id]
+        guess = guess_data['location']
+        correct = self._is_correct(answer, guess)
+        if not correct:
+            answer_score = self._find_answer_similarity(answer)
         answer_score = results[answer]
         guess_score = results[1][0]
         if correct:
@@ -114,6 +118,24 @@ class TestRunner:
         else:
             off_by = guess_score - answer_score
         return correct, guess, off_by
+
+    def _find_answer_similarity(self, answer):
+        target_entries = [
+            {"id": key, **value}
+            for key, value in self.id_mapping.items()
+            if value["location"].endswith(answer)
+        ]
+
+    def _is_correct(self, answer, guess):
+        """
+        Determine if the guess is correct.
+        
+        Guesses are stored with the full location path, whereas
+        answers are stored as relative paths. endswith is used
+        to determine if the 
+        """
+        correct = guess.endswith(answer)
+        return correct
 
     def _query_documents(self, embedded_query):
         results = self._annoy_index.get_nns_by_vector(

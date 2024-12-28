@@ -1,3 +1,6 @@
 TestData/
 venv/
 .DS_Store
+*.pyc
+*.ann
+.vscode

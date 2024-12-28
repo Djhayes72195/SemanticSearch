@@ -3,6 +3,7 @@ from pathlib import Path
 from .factory import create_test_runner
 from factories.corpus_factory import create_corpus
 from factories.embedding_generator_factory import create_embedding_generator
+import spacy
 from torch import nn
 
 def main():
@@ -14,11 +15,11 @@ def main():
         required=True,
         help="Path to the directory containing test data.",
     )
-    parser.add_argument( # Might want to allow multiple split methods.
-        "--split_method",
+    parser.add_argument(
+        "--split_methods",
         type=str,
         default=None,
-        help="Method or methods used to split documents.",
+        help="Comma-separated list of methods used to split documents (e.g., 'by_sentence,by_paragraph').",
     )
     parser.add_argument(
         "--embed-docs",
@@ -36,17 +37,20 @@ def main():
 
     # Prepare objects
     data_path = Path(args.data_path)
-    splitting_method = args.split_method
+    splitting_methods = args.split_methods.split(",") if args.split_methods else []
+    splitting_methods = [method.strip() for method in splitting_methods]
     embedding_path = args.embedding_path
     embed_docs = args.embed_docs
     if embed_docs and embedding_path:
         raise ValueError("--embed-docs should be False if --embedding-location is provided.")
+    nlp = spacy.load("en_core_web_sm")
     corpus = create_corpus(data_path)
     if embed_docs:
         eg = create_embedding_generator(
             corpus,
             data_path,
-            splitting_method
+            splitting_methods,
+            nlp
         )
         eg.generate_embeddings()
         id_mapping = eg.id_mapping
