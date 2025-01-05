@@ -1,33 +1,38 @@
 # TestRunner/factory.py
 
 from pathlib import Path
-import json
-from Models.models import CorpusData, QuestionAnswer
+from .models import QuestionAnswer
+from Models.models import CorpusData
 from TestRunner.test_runner import TestRunner
 
+
 def create_test_runner(
-        data_path: str,
-        corpus: CorpusData,
-        id_mapping: dict,
-        embedding_path: str,
-        splitting_methods,
-        embedding_time
-    ) -> TestRunner:
+    dataset_name: str,
+    corpus: CorpusData,
+    id_mapping: dict,
+    embedding_path: str,
+    splitting_methods,
+    embedding_time,
+    model_name: str
+) -> TestRunner:
     """
     Factory function to create a TestRunner instance.
 
     Args:
-        data_path (str): Path to the data directory.
+        dataset_name (str): The name of root folder of the data
         id_mapping (dict): Mapping of document IDs to embeddings.
         embedding_path (str): Path to embeddings.
 
     Returns:
         TestRunner: An initialized TestRunner instance.
     """
-    path = Path(data_path)
-    if not path.exists() or not path.is_dir():
-        raise ValueError(f"Invalid data path: {data_path}")
-
-    question_answer = QuestionAnswer(data_path)
-    return TestRunner(question_answer, corpus, id_mapping, embedding_path, splitting_methods, embedding_time)
-
+    question_answer = QuestionAnswer(dataset_name)
+    return TestRunner(
+        question_answer,
+        corpus,
+        id_mapping,
+        embedding_path,
+        splitting_methods,
+        embedding_time,
+        model_name
+    )

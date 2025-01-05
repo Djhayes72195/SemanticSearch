@@ -8,16 +8,16 @@ from sentence_transformers import SentenceTransformer, util
 
 
 class EmbeddingGenerator:
-    def __init__(self, corpus, data_path, splitter):
+    def __init__(self, corpus, dataset_name, splitter, model):
         self._corpus = corpus
-        self._data_path = data_path
+        self._data_path = dataset_name
         self._splitter = splitter
         self._annoy_index = self._set_up_annoy()
-        self._model = SentenceTransformer('all-MiniLM-L6-v2') # TODO: Take this out so model can be passed in
+        self._model = model
 
         self.id_counter = 0
         self.id_mapping = {}
-        self.embedding_path = Path("Embeddings") / Path(str(self._data_path).split("\\")[-1] + ".ann")
+        self.embedding_path = Path("Embeddings") / Path(dataset_name + ".ann")
         self.embedding_time = None
 
     def _set_up_annoy(self):
@@ -50,6 +50,7 @@ class EmbeddingGenerator:
         print(f"Embedding generation took {self.embedding_time:.2f} seconds.")
         print(f"Embeddings generated and saved at {self.embedding_path}.")
 
+        return self.id_mapping, self.embedding_path, self.embedding_time
 
     def _encode_and_store(self, splits, path):
         for split in splits:

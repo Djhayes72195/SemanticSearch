@@ -9,15 +9,10 @@ class TestingResultProcessor(ResultProcessor):
 
     def process(self, annoy_output, id_mapping, query, answer):
         top_hits_data = self._format_top_hits_data(annoy_output, id_mapping)
-        return self._create_results_dict(
-            top_hits_data,
-            query,
-            answer
-        )
+        return self._create_results_dict(top_hits_data, query, answer)
 
     def _format_top_hits_data(self, annoy_output, id_mapping):
-        top_hits_ids = annoy_output[0]
-        similarities = annoy_output[1]
+        top_hits_ids, similarities = annoy_output[0], annoy_output[1]
         top_hits_data = [id_mapping[id] for id in top_hits_ids]
 
         for i, res in enumerate(top_hits_data):
@@ -78,9 +73,10 @@ class TestingResultProcessor(ResultProcessor):
 class ProductionResultProcessor(ResultProcessor):
     """
     NOT DEVELOPED YET
-    
+
     skeleton for later use in production
     """
+
     def __init__(self, text_editor_integration):
         self.text_editor_integration = text_editor_integration
 

@@ -6,6 +6,7 @@ from factories.embedding_generator_factory import create_embedding_generator
 import spacy
 from torch import nn
 
+
 def main():
     # Argument parsing
     parser = argparse.ArgumentParser(description="Run the TestRunner pipeline.")
@@ -25,43 +26,53 @@ def main():
         "--embed-docs",
         type=bool,
         default=True,
-        help="Switch to control if we re-embed the docs."
+        help="Switch to control if we re-embed the docs.",
     )
     parser.add_argument(
-        "--embedding-path",
+        "--embedding-path", type=str, default=None, help="Path to embeddings to test."
+    )
+    parser.add_argument(
+        "--embedding-model",
         type=str,
-        default=None,
-        help="Path to embeddings to test."
+        default="all-MiniLM-L6-v2",
+        help="The model used to generate embeddings",
     )
     args = parser.parse_args()
 
     # Prepare objects
     data_path = Path(args.data_path)
+    dataset_name = data_path.name
     splitting_methods = args.split_methods.split(",") if args.split_methods else []
     splitting_methods = [method.strip() for method in splitting_methods]
     embedding_path = args.embedding_path
     embed_docs = args.embed_docs
-    if embed_docs and embedding_path:
-        raise ValueError("--embed-docs should be False if --embedding-location is provided.")
+    model_name = args.embedding_model
+    if not data_path.exists():
+        raise FileNotFoundError(f"Data path {data_path} does not exist.")
+    if not embedding_path and not embed_docs:
+        raise ValueError("Either --embedding-path or --embed-docs must be provided.")
     nlp = spacy.load("en_core_web_sm")
     corpus = create_corpus(data_path)
     if embed_docs:
         eg = create_embedding_generator(
-            corpus,
-            data_path,
-            splitting_methods,
-            nlp
+            corpus, dataset_name, splitting_methods, nlp, model_name
         )
-        eg.generate_embeddings()
-        id_mapping = eg.id_mapping
-        embedding_path = eg.embedding_path
-        embedding_time = eg.embedding_time  # TODO: return instead of directly accessing
+        id_mapping, embedding_path, embedding_time = eg.generate_embeddings()
     else:
         # TODO: gather id_mapping and metadata from previous run
         pass
     # Run tests
-    tr = create_test_runner(data_path, corpus, id_mapping, embedding_path, splitting_methods, embedding_time)
+    tr = create_test_runner(
+        dataset_name,
+        corpus,
+        id_mapping,
+        embedding_path,
+        splitting_methods,
+        embedding_time,
+        model_name
+    )
     tr.run_test()
+
 
 if __name__ == "__main__":
     main()
