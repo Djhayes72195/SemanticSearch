@@ -1,0 +1,31 @@
+{
+    "configuration": {
+        "test_set": "",
+        "embedding_model": "hugging face etc",
+        "splitting_methods": [],
+        "annoy_trees": 10,
+    },
+    "metadata": {
+        "embedding_time": ""
+    },
+    "results": [
+        {
+            "query": "query text",
+            "answer_doc_name": "Mitosis/xxx",
+            "answer_doc_position": "chars 1 through 15 OR NA if doc only test",
+            "got_top_hit_doc_correct": "true or false",
+            "ordered_results": [
+                {
+                    "text": "",
+                    "source": "",
+                    "char_range": [1, 5],
+                    "similarity": 0.345,
+                },
+                {
+                    ...
+                }
+            ]
+        },
+        ...
+    ]
+}

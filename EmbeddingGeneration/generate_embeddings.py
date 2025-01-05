@@ -1,3 +1,4 @@
+import time
 from annoy import AnnoyIndex
 import re
 from EmbeddingGeneration.splitter import TextSplitter
@@ -17,6 +18,7 @@ class EmbeddingGenerator:
         self.id_counter = 0
         self.id_mapping = {}
         self.embedding_path = Path("Embeddings") / Path(str(self._data_path).split("\\")[-1] + ".ann")
+        self.embedding_time = None
 
     def _set_up_annoy(self):
         embedding_dim = 384  # TODO: Take this out
@@ -27,16 +29,27 @@ class EmbeddingGenerator:
     def generate_embeddings(self):
         print("Working on generating embeddings")
         print("This may take a little while")
+
+        # Start timing
+        start_time = time.time()
+
         for path, doc in tqdm(self._corpus.data.items(), desc="Processing documents"):
-            splits = self._splitter.split(doc) # You should parallelize this later on.
+            splits = self._splitter.split(doc)  # You should parallelize this later on.
             self._encode_and_store(splits, path)
-        n_trees = 10 # TODO: Pass in
+
+        # Build the Annoy index
+        n_trees = 10  # TODO: Pass in
         self._annoy_index.build(n_trees=n_trees)
-        self._annoy_index.save(
-            str(self.embedding_path)
-        )
-        # TODO: Add a method to save off the id_mapping as well.
+        self._annoy_index.save(str(self.embedding_path))
+
+        # End timing
+        end_time = time.time()
+        self.embedding_time = end_time - start_time
+
+        # Print timing result
+        print(f"Embedding generation took {self.embedding_time:.2f} seconds.")
         print(f"Embeddings generated and saved at {self.embedding_path}.")
+
 
     def _encode_and_store(self, splits, path):
         for split in splits:

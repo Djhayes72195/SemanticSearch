@@ -5,7 +5,14 @@ import json
 from Models.models import CorpusData, QuestionAnswer
 from TestRunner.test_runner import TestRunner
 
-def create_test_runner(data_path: str, corpus: CorpusData, id_mapping: dict, embedding_path: str) -> TestRunner:
+def create_test_runner(
+        data_path: str,
+        corpus: CorpusData,
+        id_mapping: dict,
+        embedding_path: str,
+        splitting_methods,
+        embedding_time
+    ) -> TestRunner:
     """
     Factory function to create a TestRunner instance.
 
@@ -22,5 +29,5 @@ def create_test_runner(data_path: str, corpus: CorpusData, id_mapping: dict, emb
         raise ValueError(f"Invalid data path: {data_path}")
 
     question_answer = QuestionAnswer(data_path)
-    return TestRunner(question_answer, corpus, id_mapping, embedding_path)
+    return TestRunner(question_answer, corpus, id_mapping, embedding_path, splitting_methods, embedding_time)
 

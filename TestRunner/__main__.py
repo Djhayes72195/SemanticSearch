@@ -55,11 +55,12 @@ def main():
         eg.generate_embeddings()
         id_mapping = eg.id_mapping
         embedding_path = eg.embedding_path
+        embedding_time = eg.embedding_time  # TODO: return instead of directly accessing
     else:
-        # TODO: gather id_mapping from previous run
+        # TODO: gather id_mapping and metadata from previous run
         pass
     # Run tests
-    tr = create_test_runner(data_path, corpus, id_mapping, embedding_path)
+    tr = create_test_runner(data_path, corpus, id_mapping, embedding_path, splitting_methods, embedding_time)
     tr.run_test()
 
 if __name__ == "__main__":

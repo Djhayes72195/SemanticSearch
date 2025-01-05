@@ -4,3 +4,4 @@ venv/
 *.pyc
 *.ann
 .vscode
+running_dev_notes.md
