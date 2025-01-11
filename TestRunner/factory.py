@@ -5,15 +5,13 @@ from .models import QuestionAnswer
 from Models.models import CorpusData
 from TestRunner.test_runner import TestRunner
 
-
 def create_test_runner(
     dataset_name: str,
     corpus: CorpusData,
     id_mapping: dict,
     embedding_path: str,
-    splitting_methods,
     embedding_time,
-    model_name: str
+    config
 ) -> TestRunner:
     """
     Factory function to create a TestRunner instance.
@@ -26,13 +24,15 @@ def create_test_runner(
     Returns:
         TestRunner: An initialized TestRunner instance.
     """
+    splitting_method = config["splitting_method"]
+    model_name = config["embedding_model"]
     question_answer = QuestionAnswer(dataset_name)
     return TestRunner(
         question_answer,
         corpus,
         id_mapping,
         embedding_path,
-        splitting_methods,
+        splitting_method,
         embedding_time,
         model_name
     )

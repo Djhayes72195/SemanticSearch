@@ -1,0 +1,19 @@
+{
+    "splitting_method": [
+        "by_sentence",
+        "by_paragraph"
+    ],
+    "embedding_model": [
+        "all-MiniLM-L6-v2"
+    ],
+    "annoy_trees": [
+        10,
+        20
+    ], 
+    "cleaning_method": [
+        "no_cleaning"
+    ],
+    "split_filtering":[
+        "no_filtering"
+    ]
+}

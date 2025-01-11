@@ -114,6 +114,8 @@ class TestMetadata:
     def to_normalized_name(self) -> str:
         components = []
         for key, value in self.to_dict().items():
+            if key == "embedding_time":
+                continue  # Exclude embedding time from normalized name to avoid clutter.
             if isinstance(value, list):
                 value = "_".join(value)
             components.append(f"{key}={value}")

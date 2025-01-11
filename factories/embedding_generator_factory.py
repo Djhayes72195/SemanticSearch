@@ -2,9 +2,8 @@ from Models.models import CorpusData
 from .embedding_model_factory import EmbeddingModelFactory
 from EmbeddingGeneration.generate_embeddings import EmbeddingGenerator, TextSplitter
 
-
 def create_embedding_generator(
-    corpus: CorpusData, dataset_name: str, split_methods: list, nlp, model_name: str
+    corpus: CorpusData, dataset_name: str, nlp, config, embedding_path
 ) -> EmbeddingGenerator:
     """
     Factory method for EmbeddingGenerator class.
@@ -27,7 +26,9 @@ def create_embedding_generator(
     EmbeddingGenerator
         An initialized embedding generator.
     """
+    model_name = config["embedding_model"]
+    splitting_method = config["splitting_method"]
     embedding_model_factory = EmbeddingModelFactory()
     model = embedding_model_factory.get_model(model_name)
-    text_splitter = TextSplitter(methods=split_methods, nlp=nlp)
-    return EmbeddingGenerator(corpus, dataset_name, text_splitter, model)
+    text_splitter = TextSplitter(methods=splitting_method, nlp=nlp)
+    return EmbeddingGenerator(corpus, dataset_name, text_splitter, model, embedding_path)

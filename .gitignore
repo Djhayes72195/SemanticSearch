@@ -5,3 +5,4 @@ venv/
 *.ann
 .vscode
 running_dev_notes.md
+TestRunner/TestResults/*
