@@ -1,7 +1,6 @@
 from .config import QUESTION_ANSWER_PATH
 import json
-from dataclasses import dataclass, asdict
-from pathlib import Path
+from dataclasses import dataclass
 
 
 class QuestionAnswer:

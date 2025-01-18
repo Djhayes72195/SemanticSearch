@@ -2,9 +2,11 @@ import os
 import hashlib
 from pathlib import Path
 import spacy
+from logger import logger
 from factories.embedding_model_factory import EmbeddingModelFactory
 from EmbeddingGeneration.config import PATH_TO_EMBEDDINGS, HASH_RECORD_PATH
-from EmbeddingGeneration.generate_embeddings import EmbeddingGenerator, TextSplitter
+from EmbeddingGeneration.generate_embeddings import EmbeddingGenerator
+from EmbeddingGeneration.splitter import TextSplitter
 import json
 
 
@@ -118,6 +120,7 @@ class EmbeddingsManager:
 
         # TODO: We may want to add additional checks
 
+        logger.info(f"Embedding {embedding_identifier} already exists")
         return True
 
     def generate_embedding_identifier(self, config):
@@ -134,7 +137,6 @@ class EmbeddingsManager:
         str
             A unique hashed identifier for the embeddings.
         """
-        # Combine key settings into a unique string
         key_settings = (
             self._dataset_name,
             config["splitting_method"],
@@ -144,11 +146,9 @@ class EmbeddingsManager:
         )
         unique_string = "__".join(map(str, key_settings))
 
-        # Generate a hash for the unique string
         hash_object = hashlib.md5(unique_string.encode())
         embedding_hash = hash_object.hexdigest()
 
-        # Save hash to record for traceability
         EmbeddingsManager.save_hash_record(embedding_hash, unique_string)
 
         return embedding_hash
@@ -164,14 +164,12 @@ class EmbeddingsManager:
         unique_string : str
             The unique string that generated the hash.
         """
-        # Load existing records or create a new dictionary
         if os.path.exists(HASH_RECORD_PATH) and os.path.getsize(HASH_RECORD_PATH) > 0:
             with open(HASH_RECORD_PATH, "r") as f:
                 hash_record = json.load(f)
         else:
             hash_record = {}
 
-        # Update the record with the new hash
         if embedding_hash not in hash_record:
             hash_record[embedding_hash] = unique_string
             with open(HASH_RECORD_PATH, "w") as f:

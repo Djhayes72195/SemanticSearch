@@ -9,3 +9,4 @@ TestRunner/TestResults/*
 Embeddings/*
 TestRunner/embedding_hashes.json
 TestRunner/QuestionAnswer/*
+app.log

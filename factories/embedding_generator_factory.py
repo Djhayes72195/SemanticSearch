@@ -1,6 +1,7 @@
 from Models.models import CorpusData
 from .embedding_model_factory import EmbeddingModelFactory
-from EmbeddingGeneration.generate_embeddings import EmbeddingGenerator, TextSplitter
+from EmbeddingGeneration.generate_embeddings import EmbeddingGenerator
+from EmbeddingGeneration.splitter import TextSplitter
 
 def create_embedding_generator(
     corpus: CorpusData, dataset_name: str, nlp, config, embedding_identifier

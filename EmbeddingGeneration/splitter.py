@@ -114,10 +114,8 @@ class TextSplitter:
         - Split on ., ?, !
         - Split on new lines
         """
-        # Use a regular expression to split on ., ?, !, or new lines (\n)
         splits = re.split(r'[.?!\n]+', document)
         
-        # Remove any empty strings or leading/trailing whitespace
         return [split.strip() for split in splits if split.strip()]
 
     def OLD_IMPLEMENTATION_get_char_ranges(self, document, splits, is_testing=False):

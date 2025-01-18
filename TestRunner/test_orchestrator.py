@@ -5,14 +5,11 @@ from .config import (
 )
 from pathlib import Path
 from factories.corpus_factory import create_corpus
-import os
 import json
 import itertools
-import spacy
 from .factory import create_test_runner
 from factories.corpus_factory import create_corpus
-from factories.embedding_generator_factory import create_embedding_generator
-from Core.embeddings_manager import EmbeddingsManager
+from logger import logger
 
 
 class TestOrchestrator:
@@ -29,10 +26,14 @@ class TestOrchestrator:
     def orchestrate(self):
         if self._mode == "grid":
             config_space = self._load_configs()
+            logger.info("Creating config set for grid test run.")
             configs = self._generate_combinations(config_space)
-            for config in configs:
+            logger.info(f"{len(configs)} configurations will be tested.")
+            for i, config in enumerate(configs):
+                logger.info(f"Testing configuration {i}")
                 self.run_test(config)
         elif self._mode == "single" and self._single_config_path:
+            logger.info("Testing single configuration.")
             with open(self._single_config_path, "r") as f:
                 config = json.load(f)
             self.run_test(config)
@@ -44,13 +45,7 @@ class TestOrchestrator:
         id_mapping, embedding_time, embedding_id = (
             self._embedding_manager.generate_or_load_embeddings(config, self._corpus)
         )
-    # dataset_name: str,
-    # corpus: CorpusData,
-    # id_mapping: dict,
-    # embedding_path: str,
-    # embedding_time,
-    # config
-        # Create and execute the test runner
+
         test_runner = create_test_runner(
             self._dataset_name,
             self._corpus,
@@ -60,14 +55,13 @@ class TestOrchestrator:
             self._embedding_manager,
             embedding_id
         )
+        logger.info(f"Running test for corpus {self._corpus.dataset_name}, embedding {embedding_id}")
         test_runner.run_test()
 
     def _load_configs(self):
         """
         Load grid search configuration from a JSON file.
         """
-        # script_dir = os.path.dirname(os.path.abspath(__file__))
-        # full_path = os.path.join(script_dir, GRID_SEARCH_CONFIG_PATH)
         with open(GRID_SEARCH_CONFIG_PATH, "r") as f:
             return json.load(f)
 

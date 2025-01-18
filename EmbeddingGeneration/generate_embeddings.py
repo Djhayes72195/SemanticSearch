@@ -1,11 +1,9 @@
 import time
+from logger import logger
 from config import PATH_TO_EMBEDDINGS
 from annoy import AnnoyIndex
-from EmbeddingGeneration.splitter import TextSplitter
-import json
 from pathlib import Path
 from tqdm import tqdm
-from sentence_transformers import SentenceTransformer, util
 
 
 class EmbeddingGenerator:
@@ -29,14 +27,13 @@ class EmbeddingGenerator:
         return annoy_index
 
     def generate_embeddings(self):
-        print("Working on generating embeddings")
-        print("This may take a little while")
+        logger.info("Working on generating embeddings")
+        logger.info("This may take a little while")
         embedding_path = PATH_TO_EMBEDDINGS / Path(f"{self.embedding_id}.ann")
-        # Start timing
         start_time = time.time()
 
         for path, doc in tqdm(self._corpus.data.items(), desc="Processing documents"):
-            splits = self._splitter.split(doc)  # You should parallelize this later on.
+            splits = self._splitter.split(doc)  # TODO: You should parallelize this later on.
             self._encode_and_store(splits, path)
 
         n_trees = 10  # TODO: Pass in
@@ -46,9 +43,8 @@ class EmbeddingGenerator:
         end_time = time.time()
         self.embedding_time = end_time - start_time
 
-        # Print timing result
-        print(f"Embedding generation took {self.embedding_time:.2f} seconds.")
-        print(f"Embeddings generated and saved at {embedding_path}.")
+        logger.info(f"Embedding generation took {self.embedding_time:.2f} seconds.")
+        logger.info(f"Embeddings generated and saved at {embedding_path}.")
 
         return self.id_mapping, self.embedding_time, self.embedding_id
 

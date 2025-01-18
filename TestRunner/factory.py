@@ -5,12 +5,7 @@ from .models import QuestionAnswer
 from Models.models import CorpusData
 from TestRunner.test_runner import TestRunner
 
-            # self._dataset_name,
-            # self._corpus,
-            # id_mapping,
-            # embedding_time,
-            # config,
-            # self._embedding_manager
+
 def create_test_runner(
     dataset_name: str,
     corpus: CorpusData,
