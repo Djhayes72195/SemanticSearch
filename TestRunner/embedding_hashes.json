@@ -1,0 +1,5 @@
+{
+    "9cf748a24f32162a415f3e4320b08fb2": "Mitosis__['by_sentence']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']",
+    "ecb71c598dfa8cf1f478ef841dfb783b": "Mitosis__['by_paragraph']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']",
+    "dc31707ea601b33f7bb2d37f1f52be38": "Mitosis__['by_sentence', 'by_paragraph']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']"
+}

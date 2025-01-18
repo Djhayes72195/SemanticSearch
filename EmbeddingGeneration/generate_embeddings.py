@@ -1,14 +1,15 @@
 import time
+from config import PATH_TO_EMBEDDINGS
 from annoy import AnnoyIndex
-import re
 from EmbeddingGeneration.splitter import TextSplitter
+import json
 from pathlib import Path
 from tqdm import tqdm
 from sentence_transformers import SentenceTransformer, util
 
 
 class EmbeddingGenerator:
-    def __init__(self, corpus, dataset_name, splitter, model, embedding_path):
+    def __init__(self, corpus, dataset_name, splitter, model, embedding_id):
         self._corpus = corpus
         self._data_path = dataset_name
         self._splitter = splitter
@@ -17,7 +18,8 @@ class EmbeddingGenerator:
 
         self.id_counter = 0
         self.id_mapping = {}
-        self.embedding_path = embedding_path
+
+        self.embedding_id = embedding_id
         self.embedding_time = None
 
     def _set_up_annoy(self):
@@ -29,7 +31,7 @@ class EmbeddingGenerator:
     def generate_embeddings(self):
         print("Working on generating embeddings")
         print("This may take a little while")
-
+        embedding_path = PATH_TO_EMBEDDINGS / Path(f"{self.embedding_id}.ann")
         # Start timing
         start_time = time.time()
 
@@ -37,20 +39,18 @@ class EmbeddingGenerator:
             splits = self._splitter.split(doc)  # You should parallelize this later on.
             self._encode_and_store(splits, path)
 
-        # Build the Annoy index
         n_trees = 10  # TODO: Pass in
         self._annoy_index.build(n_trees=n_trees)
-        self._annoy_index.save(str(self.embedding_path))
+        self._annoy_index.save(str(embedding_path))
 
-        # End timing
         end_time = time.time()
         self.embedding_time = end_time - start_time
 
         # Print timing result
         print(f"Embedding generation took {self.embedding_time:.2f} seconds.")
-        print(f"Embeddings generated and saved at {self.embedding_path}.")
+        print(f"Embeddings generated and saved at {embedding_path}.")
 
-        return self.id_mapping, self.embedding_time
+        return self.id_mapping, self.embedding_time, self.embedding_id
 
     def _encode_and_store(self, splits, path):
         for split in splits:
