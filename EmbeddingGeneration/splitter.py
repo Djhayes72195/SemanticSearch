@@ -65,6 +65,10 @@ class TextSplitter:
         return splits
 
     def _by_paragraph(self, document):
+        # TODO: Think about how to do by paragraph splits and iff we need it.
+        # splits = []
+        # ranges = []
+        # paragraphs = re.split(r'\n\s*\n', document)
         return [{'text': 'dummy text', 'range': [1,2]}]
 
     def _usefulness_filter(self):
