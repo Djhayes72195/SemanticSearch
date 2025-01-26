@@ -16,10 +16,7 @@ class QuestionAnswer:
 
     Expected JSON Format
     --------------------
-    {
-        "test_data_path_1": {"question": "What is X?", "answer": "X is ..."},
-        "test_data_path_2": {"question": "What is Y?", "answer": "Y is ..."}
-    }
+    TODO: Add to docs once finalized.
     """
 
     def __init__(self, dataset_name: str):

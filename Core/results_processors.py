@@ -4,12 +4,188 @@ class ResultProcessor:
 
 
 class TestingResultProcessor(ResultProcessor):
+    """
+    {
+        "metadata": {
+            "dataset_name": "Mitosis",
+            "embedding_model": "all-MiniLM-L6-v2",
+            "splitting_methods": [
+                "by_paragraph"
+            ],
+            "annoy_trees": 10,
+            "embedding_time": 0.23560380935668945
+        },
+        "results": [
+            {
+                "query": "Sister chromatids separation during anaphase",
+                "ground_truth_doc": "Anaphase.md",
+                "ground_truth_position": null,
+                "ground_truth_text: ...
+                "got_correct_doc_any": true/false
+                "overlaps_w_true_position_any: true/false
+                "ground_truth_is_subset_any": true/false
+                "ordered_results": [
+                    {
+                        "location": "C:\\Users\\Djhay\\OneDrive\\Desktop\\Projects\\Hackathon\\Hackathon\\TestData\\Mitosis\\Anaphase.md",
+                        "char_range": [
+                            1,
+                            2
+                        ],
+                        "overlap": ...
+                    ...
+    """
+
     def __init__(self, corpus):
         self._corpus = corpus
 
-    def process(self, annoy_output, id_mapping, query, answer):
+    def process(
+        self,
+        annoy_output,
+        id_mapping,
+        query,
+        ground_truth,
+    ):
         top_hits_data = self._format_top_hits_data(annoy_output, id_mapping)
-        return self._create_results_dict(top_hits_data, query, answer)
+        ordered_results, any_metrics = self._evaluate_results(
+            top_hits_data, ground_truth
+        )
+        return self._create_results_dict(
+            ordered_results, any_metrics, query, ground_truth
+        )
+
+    def _evaluate_results(self, top_hits_data, ground_truth):
+        ordered_results = [
+            self._evaluate_hit(hit, ground_truth) for hit in top_hits_data
+        ]
+        any_metrics = self._aggregate_any_metrics(ordered_results)
+
+        return ordered_results, any_metrics
+
+    def _aggregate_any_metrics(self, ordered_results):
+        """
+        Aggregates "any" metrics across all hits.
+
+        Args:
+            ordered_results (list): A list of dictionaries representing the evaluation of each hit.
+            ground_truth (dict): The ground truth data containing the correct document and position.
+
+        Returns:
+            dict: A dictionary containing aggregated metrics.
+        """
+        # Initialize "any" metrics
+        got_correct_doc_any = False
+        overlaps_w_true_position_any = False
+        ground_truth_is_subset_any = False
+
+        # Iterate through all hit results
+        for hit in ordered_results:
+            got_correct_doc_any = hit["is_correct_doc"] or got_correct_doc_any
+            overlaps_w_true_position_any = (
+                hit["overlap_length"] > 0 or overlaps_w_true_position_any
+            )
+            ground_truth_is_subset_any = hit["is_subset"] or ground_truth_is_subset_any
+
+            # Early exit if all "any" metrics are True
+            if (
+                got_correct_doc_any
+                and overlaps_w_true_position_any
+                and ground_truth_is_subset_any
+            ):
+                break
+
+        # Return the aggregated metrics
+        return {
+            "got_correct_doc_any": got_correct_doc_any,
+            "overlaps_w_true_position_any": overlaps_w_true_position_any,
+            "ground_truth_is_subset_any": ground_truth_is_subset_any,
+        }
+
+    def OLD_evaluate_results(self, top_hits_data, ground_truth):
+        """
+        "query": "Sister chromatids separation during anaphase",
+        "ground_truth_doc": "Anaphase.md",
+        "ground_truth_position": null,
+        "ground_truth_text: ...
+        "got_correct_doc_any": true/false
+        "overlaps_w_true_position_any: true/false
+        "ground_truth_is_subset_any": true/false
+        "ordered_results": [
+        """
+        results = {
+            "got_correct_doc_any": False,
+            "overlaps_w_true_position_any": False,
+            "ground_truth_is_subset_any": False,
+            "ordered_results": [],
+        }
+
+        for hit in top_hits_data:
+            hit_res = self._evaluate_hit(hit, ground_truth)
+            results["ordered_results"].append(hit_res)
+
+            results["got_correct_doc_any"] = (
+                hit_res["is_correct_doc"] or results["got_correct_doc_any"]
+            )
+            results["overlaps_w_true_position_any"] = (
+                hit_res["overlap_length"] > 0 or results["overlaps_w_true_position_any"]
+            )
+            results["ground_truth_is_subset_any"] = (
+                hit_res["is_subset"] or results["ground_truth_is_subset_any"]
+            )
+
+        return results
+
+    def _format_overall_results(self, results, ground_truth):
+        """
+            {
+        "query": "Sister chromatids separation during anaphase",
+        "ground_truth_doc": "Anaphase.md",
+        "ground_truth_position": null,
+        "ground_truth_text: ...
+        "got_correct_doc_any": true/false
+        "overlaps_w_true_position_any: true/false
+        "got_top_hit_correct": true,
+        "top_hit_overlaps_w_true_pos": true/false
+        "ordered_results": [
+        """
+
+    def _evaluate_hit(self, hit, ground_truth):
+        """
+        TODO: Fix key names. The differences between ground truth config and
+        hit config is confusing.
+        """
+        is_correct_doc = self._is_correct_document(
+            ground_truth.get("doc", ""),
+            hit[
+                "location"
+            ],  # TODO: better to make names match as opposed to "doc" and "location"
+        )
+        overlap, overlap_length, is_subset = self._calculate_overlap(
+            ground_truth["position"], hit["char_range"]
+        )
+        return {
+            "hit_text": hit["text"],
+            "is_correct_doc": is_correct_doc,
+            "overlap": overlap,
+            "overlap_length": overlap_length,
+            "is_subset": is_subset,
+            "similarity_score": hit["similarity"],
+            "splitting_method": hit["splitting_method"],
+        }
+
+    def _calculate_overlap(self, gt_pos, hit_pos):
+        overlap_start = max(gt_pos[0], hit_pos[0])
+        overlap_end = min(gt_pos[1], hit_pos[1])
+
+        if overlap_start >= overlap_end:
+            overlap = None
+            overlap_length = 0
+        else:
+            overlap = [overlap_start, overlap_end]
+            overlap_length = overlap_end - overlap_start
+
+        is_subset = gt_pos[0] >= hit_pos[0] and gt_pos[1] <= hit_pos[1]
+
+        return overlap, overlap_length, is_subset
 
     def _format_top_hits_data(self, annoy_output, id_mapping):
         top_hits_ids, similarities = annoy_output[0], annoy_output[1]
@@ -26,7 +202,7 @@ class TestingResultProcessor(ResultProcessor):
             )
         return top_hits_data
 
-    def _create_results_dict(self, top_hits_data, query, answer):
+    def _create_results_dict(self, ordered_results, any_metrics, query, ground_truth):
         """
         {
             "query": "query text",
@@ -46,17 +222,15 @@ class TestingResultProcessor(ResultProcessor):
             ]
         }
         """
-        return {
-            "query": query,
-            "answer": answer,
-            "answer_position": None,  # TODO: Include answer char range if available,
-            "got_top_hit_correct": self._is_correct(
-                answer, top_hits_data[0].get("location")
-            ),
-            "ordered_results": top_hits_data,
-        }
+        res_dict = {"query": query}
+        res_dict["ground_truth_doc"] = ground_truth["doc"]
+        res_dict["ground_truth_pos"] = ground_truth["position"]
+        res_dict["ground_truth_text"] = ground_truth["text"]
+        res_dict.update(any_metrics)
+        res_dict.update({"ordered_results": ordered_results})
+        return res_dict
 
-    def _is_correct(self, answer, guess):
+    def _is_correct_document(self, answer, guess):
         """
         Determine if the guess matches the expected answer.
 

@@ -1,13 +1,39 @@
 import re
+from langchain.text_splitter import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
+
+from .config import HEADERS_TO_SPLIT_ON, RECURSIVE_SPLITTER_CONFIG
+
 
 class TextSplitter:
     def __init__(self, methods: list, nlp):
         self._methods = methods
         self._nlp = nlp
+        self._markdown_splitter = self._create_md_splitter()
+        self._recursive_splitter = self._create_recursive_splitter()
         self._method_map = {
             "by_sentence": self._by_sentence,
             "by_paragraph": self._by_paragraph,
+            # "markdown_split": self._markdown_split,
+            "recursive_split": self._recursive_split
+            # There is ae LangChain splitter that may be good here.
+            # Also found this from Pinecone docs.
+            # Here are the steps that make semantic chunking work:
+
+# Break up the document into sentences.
+# Create sentence groups: for each sentence, create a group containing some sentences before and after the given sentence. The group is essentially “anchored” by the sentence use to create it. You can decide the specific numbers before or after to include in each group - but all sentences in a group will be associated with one “anchor” sentence.
+# Generate embeddings for each sentence group and associate them with their “anchor” sentence.
+# Compare distances between each group sequentially: When you look at the sentences in the document sequentially, as long as the topic or theme is the same - the distance between the sentence group embedding for a given sentence and the sentence group preceding it will be low. On the other hand, higher semantic distance indicates that the theme or topic has changed. This can effectively delineate one chunk from the next.
         }
+
+    def _create_md_splitter(self):
+        return MarkdownHeaderTextSplitter(
+            headers_to_split_on=HEADERS_TO_SPLIT_ON
+        )
+
+    def _create_recursive_splitter(self):
+        return RecursiveCharacterTextSplitter(
+            **RECURSIVE_SPLITTER_CONFIG
+        )
 
     def split(self, document):
         """
@@ -56,13 +82,44 @@ class TextSplitter:
                 raise ValueError(f"Split method '{method}' not available.")
             
             raw_splits = self._method_map[method](document)
-            
+            # Implement usefulness filter
             for split in raw_splits:
                 split["method"] = method
 
             splits.extend(raw_splits)
 
         return splits
+
+    def _markdown_split(self, document):
+        """
+        Splits on markdown headers (#, ##, etc)
+
+        TODO: Implement this later if I decide we need it
+        """
+        splits = [
+            split.page_content for split in
+                self._markdown_splitter.split_text(
+                    document
+                )
+            ]  # we have the option to return the name of the headers we split on.
+            # For now I won't worry about that to make the splitting methods consistent,
+            # but we will may want to use them eventually.
+
+    def _recursive_split(self, document):
+        ranges = []
+        splits = self._recursive_splitter.split_text(
+            document
+        )
+        start_chars = [
+            document.find(split) for
+            split in splits
+        ]  # `find` for finding splitting indexes might not be ideal. Consider alt method.
+        ranges = [
+            [start_char, start_char + len(split)]
+            for start_char, split in
+            zip(start_chars, splits)
+        ]
+        return [{"text": split, "range": r} for split, r in zip(splits, ranges)]
 
     def _by_paragraph(self, document):
         # TODO: Think about how to do by paragraph splits and iff we need it.

@@ -8,6 +8,7 @@ from .config import TEST_RESULTS_PATH
 from Core.results_processors import TestingResultProcessor
 from EmbeddingGeneration.config import PATH_TO_EMBEDDINGS
 
+
 class TestRunner:
     """
     TestRunner is responsible for executing tests using embeddings and configurations
@@ -92,7 +93,11 @@ class TestRunner:
 
         for test_case in self._qa.question_answer:
             query = test_case.get("query", "")
-            expected_answer = test_case.get("answer", "")
+            ground_truth = {
+                "doc": test_case.get("answer_doc", ""),
+                "position": test_case.get("answer_position", ""),
+                "text": test_case.get("answer_text", "")
+            }
 
             if not query:
                 print(f"Skipping test case: Missing query in {test_case}")
@@ -103,7 +108,10 @@ class TestRunner:
             annoy_output = self._query_documents(embedded_query)
 
             processed_results = self._results_processor.process(
-                annoy_output, self._id_mapping, query, expected_answer
+                annoy_output,
+                self._id_mapping,
+                query,
+                ground_truth
             )
             case_by_case_results.append(processed_results)
 
