@@ -2,6 +2,7 @@ import argparse
 from logger import logger
 from TestRunner.test_orchestrator import TestOrchestrator
 from Core.embeddings_manager import EmbeddingsManager
+from Core.keyword_manager import KeywordManager
 
 
 def main():
@@ -28,11 +29,15 @@ def main():
     em = EmbeddingsManager(
         dataset_name=dataset_name
     )
+    km = KeywordManager(
+        dataset_name=dataset_name
+    )
     logger.info("Creating Test Orchestrator")
     to = TestOrchestrator(
         dataset_name=dataset_name,
         mode=mode,
         embedding_manager=em,
+        keyword_manager=km,
         single_config_path=single_config_path,
     )
     logger.info("Begining testing process")

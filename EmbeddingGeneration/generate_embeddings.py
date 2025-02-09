@@ -26,15 +26,15 @@ class EmbeddingGenerator:
         annoy_index = AnnoyIndex(embedding_dim, metric)
         return annoy_index
 
-    def generate_embeddings(self):
-        logger.info("Working on generating embeddings")
-        logger.info("This may take a little while")
-        embedding_path = PATH_TO_EMBEDDINGS / Path(f"{self.embedding_id}.ann")
-        start_time = time.time()
+    def generate_embeddings(self, preprocessed_chunks):
+        # logger.info("Working on generating embeddings")
+        # logger.info("This may take a little while")
+        # embedding_path = PATH_TO_EMBEDDINGS / Path(f"{self.embedding_id}.ann")
+        # start_time = time.time()
 
-        for path, doc in tqdm(self._corpus.data.items(), desc="Processing documents"):
-            splits = self._splitter.split(doc)  # TODO: You should parallelize this later on.
-            self._encode_and_store(splits, path)
+        # for path, doc in tqdm(self._corpus.data.items(), desc="Processing documents"):
+        #     splits = self._splitter.split(doc)  # TODO: You should parallelize this later on.
+        # self._encode_and_store(splits, path)
 
         n_trees = 10  # TODO: Pass in
         self._annoy_index.build(n_trees=n_trees)
@@ -65,5 +65,9 @@ class EmbeddingGenerator:
         return {
             "location": str(path),
             "char_range": split["range"],
-            "splitting_method": split["method"]
-        }
+            "splitting_method": split["method"],
+            "parent_chunk_range": (
+                split.get("parent_large_chunk").get("range")
+                if "parent_large_chunk" in split else None
+            )
+        }  # This is where I should add parent chunk info

@@ -9,7 +9,7 @@ class TextSplitter:
         self._methods = methods
         self._nlp = nlp
         self._markdown_splitter = self._create_md_splitter()
-        self._recursive_splitter = self._create_recursive_splitter()
+        self._recursive_splitters = self._create_recursive_splitters()
         self._method_map = {
             "by_sentence": self._by_sentence,
             "by_paragraph": self._by_paragraph,
@@ -30,10 +30,25 @@ class TextSplitter:
             headers_to_split_on=HEADERS_TO_SPLIT_ON
         )
 
-    def _create_recursive_splitter(self):
-        return RecursiveCharacterTextSplitter(
-            **RECURSIVE_SPLITTER_CONFIG
-        )
+    def _create_recursive_splitters(self):
+        return {
+            "large": [
+                RecursiveCharacterTextSplitter(
+                **RECURSIVE_SPLITTER_CONFIG["large_w_overlap"]
+                ),
+                # RecursiveCharacterTextSplitter(
+                #     **RECURSIVE_SPLITTER_CONFIG["large_no_overlap"]
+                # ),
+            ],
+            "small": [
+                RecursiveCharacterTextSplitter(
+                    **RECURSIVE_SPLITTER_CONFIG["small_w_overlap"]
+                ),
+                # RecursiveCharacterTextSplitter(
+                #     **RECURSIVE_SPLITTER_CONFIG["small_no_overlap"]
+                # )
+            ]
+        }
 
     def split(self, document):
         """
@@ -106,20 +121,50 @@ class TextSplitter:
             # but we will may want to use them eventually.
 
     def _recursive_split(self, document):
-        ranges = []
-        splits = self._recursive_splitter.split_text(
-            document
-        )
-        start_chars = [
-            document.find(split) for
-            split in splits
-        ]  # `find` for finding splitting indexes might not be ideal. Consider alt method.
-        ranges = [
-            [start_char, start_char + len(split)]
-            for start_char, split in
-            zip(start_chars, splits)
-        ]
-        return [{"text": split, "range": r} for split, r in zip(splits, ranges)]
+        """
+        Implements multi-granularity chunking:
+        1. Large chunks are first extracted.
+        2. Each large chunk is then broken into smaller chunks.
+        3. Both large and small chunks are stored in the output.
+        4. Small chunks maintain a reference to their parent large chunk.
+        """
+        all_splits = []
+
+        for splitter in self._recursive_splitters["large"]:
+            large_chunks = splitter.split_text(document)
+
+            large_ranges = [
+                [document.find(chunk), document.find(chunk) + len(chunk)]
+                for chunk in large_chunks
+            ]
+
+            for large_chunk, large_range in zip(large_chunks, large_ranges):
+                large_chunk_entry = {
+                    "text": large_chunk,
+                    "range": large_range,
+                    "granularity": "large"
+                }
+                all_splits.append(large_chunk_entry)  # ✅ Store large chunk
+
+                large_start = large_range[0]  # Offset for small chunk ranges
+                for small_splitter in self._recursive_splitters["small"]:
+                    small_chunks = small_splitter.split_text(large_chunk)
+
+                    small_ranges = [
+                        [large_start + large_chunk.find(chunk), large_start + large_chunk.find(chunk) + len(chunk)]
+                        for chunk in small_chunks
+                    ]
+
+                    for small_chunk, small_range in zip(small_chunks, small_ranges):
+                        all_splits.append({
+                            "text": small_chunk,
+                            "range": small_range,
+                            "granularity": "small",
+                            "parent_large_chunk": large_chunk_entry
+                        })
+
+        return all_splits
+
 
     def _by_paragraph(self, document):
         # TODO: Think about how to do by paragraph splits and iff we need it.

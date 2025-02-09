@@ -40,12 +40,10 @@ class TestingResultProcessor(ResultProcessor):
 
     def process(
         self,
-        annoy_output,
-        id_mapping,
+        top_hits_data,
         query,
         ground_truth,
     ):
-        top_hits_data = self._format_top_hits_data(annoy_output, id_mapping)
         ordered_results, any_metrics = self._evaluate_results(
             top_hits_data, ground_truth
         )

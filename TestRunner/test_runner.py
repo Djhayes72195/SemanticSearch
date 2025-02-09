@@ -1,9 +1,12 @@
-import os
+import re
 import json
+from rank_bm25 import BM25Okapi
+
 from pathlib import Path
 from logger import logger
 from annoy import AnnoyIndex
 from .models import TestMetadata
+import unicodedata
 from .config import TEST_RESULTS_PATH
 from Core.results_processors import TestingResultProcessor
 from EmbeddingGeneration.config import PATH_TO_EMBEDDINGS
@@ -25,6 +28,7 @@ class TestRunner:
         config,
         qa,
         embedding_id,
+        keyword_ranking_model,
         similarity_calculator=None,
     ):
         """
@@ -51,6 +55,7 @@ class TestRunner:
         self._corpus = corpus
         self._id_mapping = id_mapping
         self._embedding_manager = embedding_manager
+        self._keyword_ranking_model = keyword_ranking_model
         self._embedding_time = embedding_time
         self._config = config
         self._qa = qa
@@ -96,22 +101,24 @@ class TestRunner:
             ground_truth = {
                 "doc": test_case.get("answer_doc", ""),
                 "position": test_case.get("answer_position", ""),
-                "text": test_case.get("answer_text", "")
+                "text": test_case.get("answer_text", ""),
             }
 
             if not query:
                 print(f"Skipping test case: Missing query in {test_case}")
                 continue
 
+            # This bit should probably be in its own module
             embedded_query = self._embedding_model.encode(query, convert_to_tensor=True)
 
             annoy_output = self._query_documents(embedded_query)
+            top_hits_data = self._extract_top_hits_data(annoy_output)
+            top_hits_data = self._append_keyword_scores(top_hits_data, query)
+            top_hits_data = self._rank_results(top_hits_data)
+            # End bit that should be in its own module.
 
             processed_results = self._results_processor.process(
-                annoy_output,
-                self._id_mapping,
-                query,
-                ground_truth
+                top_hits_data, query, ground_truth
             )
             case_by_case_results.append(processed_results)
 
@@ -121,6 +128,101 @@ class TestRunner:
         }
         logger.info("Test complete, writing results.")
         self._write_results(final_results)
+
+    def _rank_results(self, top_hits_data):
+        weights = self._config.get("semantic_vs_keyword_weights", [0.5, 0.5])
+        semantic_weight, keyword_weight = (
+            weights if isinstance(weights, list) and len(weights) == 2 else [0.5, 0.5]
+        )
+        for hit in top_hits_data:
+            hit["general_sim"] = (
+                hit["similarity"] * semantic_weight
+                + hit["keyword_score"] * keyword_weight
+            )
+        top_hits_data = sorted(
+            top_hits_data,
+            key=lambda x: x["general_sim"],
+            reverse=False,
+        )[
+            :10
+        ]  # Keep top 10
+        return top_hits_data
+
+    def _append_keyword_scores(self, top_hits_data, query):
+        query_tokens = self._tokenize(query)
+        for hit in top_hits_data:
+            keyword_score = self._calculate_keyword_score(query_tokens, hit["text"])
+            hit.update(
+                {"keyword_score": 1 - keyword_score}
+            )  # Invert keyword score to match annoy distance metric
+        return top_hits_data
+
+    def _calculate_keyword_score(self, query_tokens, hit_text):
+        """
+        Computes the BM25 relevance score for a given passage.
+
+        Args:
+            query_tokens (list): Tokenized query.
+            hit_text (str): The retrieved text.
+
+        Returns:
+            float: BM25 score (higher = more relevant).
+        """
+        passage_tokens = self._tokenize(hit_text)
+        return self._keyword_ranking_model.get_scores(query_tokens)
+
+
+    def OLD_IMPLEMENTATION_calculate_keyword_score_jaccard(self, query_tokens, passage_text):
+        """
+        Computes keyword overlap using Jaccard similarity.
+
+        Args:
+            query_text (str): The search query.
+            passage_text (str): The retrieved text.
+
+        Returns:
+            float: Jaccard similarity score (0 to 1).
+        """
+        passage_tokens = self._tokenize(passage_text)
+
+        if not query_tokens or not passage_tokens:
+            return 0.0
+
+        intersection = len(query_tokens & passage_tokens)
+        union = len(query_tokens | passage_tokens)
+        return intersection / union
+
+    def _tokenize(self, text):
+        """
+        Tokenizes and normalizes text (lowercase, removes punctuation).
+
+        Args:
+            text (str): Input text.
+
+        Returns:
+            set: A set of unique words.
+        """
+        text = "".join(
+            c
+            for c in unicodedata.normalize("NFKD", text)
+            if not unicodedata.combining(c)
+        )  # remove accents
+        return set(re.findall(r"\b\w+\b", text.lower()))
+
+    def _extract_top_hits_data(self, annoy_output):
+        top_hits_ids, similarities = annoy_output[0], annoy_output[1]
+        top_hits_data = [self._id_mapping[id] for id in top_hits_ids]
+
+        for i, res in enumerate(top_hits_data):
+            res.update({"similarity": similarities[i]})
+            res.update(
+                {
+                    "text": self._corpus.find_passage(
+                        res.get("location"), res.get("char_range")
+                    )
+                }
+            )
+        return top_hits_data
 
     def _query_documents(self, embedded_query):
         """
@@ -137,7 +239,7 @@ class TestRunner:
             List of nearest neighbors and their distances.
         """
         return self._annoy_index.get_nns_by_vector(
-            embedded_query, 5, include_distances=True
+            embedded_query, 20, include_distances=True
         )
 
     def _write_results(self, final_results):

@@ -14,8 +14,28 @@ HEADERS_TO_SPLIT_ON = [
 ]
 
 RECURSIVE_SPLITTER_CONFIG = {
-    "separators": ["\n\n", "\n", " ", ""],
-    "chunk_size": 1000,
-    "chunk_overlap": 200,
-    "length_function": len
+    "large_w_overlap": {
+        "separators": ["\n\n", "\n", " ", ""],
+        "chunk_size": 1000,
+        "chunk_overlap": 200,
+        "length_function": len
+    },
+    "large_no_overlap": {
+        "separators": ["\n\n", "\n"," ", ""],
+        "chunk_size": 1000,
+        "chunk_overlap": 0,
+        "length_function": len
+    },
+    "small_w_overlap": {
+        "separators": ["\n\n", "\n", ".", ",", "-", ":", ";", " ", ""],
+        "chunk_size": 50,
+        "chunk_overlap": 10,
+        "length_function": len
+    },
+    "small_no_overlap": {
+        "separators": ["\n\n", "\n", ".", ",", "-", ":", ";", " ", ""],
+        "chunk_size": 50,
+        "chunk_overlap": 0,
+        "length_function": len
+    }
 }

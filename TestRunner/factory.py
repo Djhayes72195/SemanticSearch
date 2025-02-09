@@ -13,7 +13,8 @@ def create_test_runner(
     embedding_time: float,
     config,
     embedding_manager,
-    embedding_id
+    embedding_id,
+    keyword_ranking_model
 ) -> TestRunner:
     """
     Factory function to create a TestRunner instance.
@@ -35,5 +36,6 @@ def create_test_runner(
         embedding_time=embedding_time,
         config=config,
         qa=question_answer,
-        embedding_id=embedding_id
+        embedding_id=embedding_id,
+        keyword_ranking_model=keyword_ranking_model
    )

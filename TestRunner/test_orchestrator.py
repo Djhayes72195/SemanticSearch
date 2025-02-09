@@ -1,12 +1,13 @@
 from .config import (
     DATASETS_PATH,
     GRID_SEARCH_CONFIG_PATH,
-    NON_MUTUALLY_EXCLUSIVE_CONFIGS
+    NON_MUTUALLY_EXCLUSIVE_CONFIGS,
 )
 from pathlib import Path
 from factories.corpus_factory import create_corpus
 import json
 import itertools
+from Core.corpus_processor import CorpusProcessor
 from .factory import create_test_runner
 from factories.corpus_factory import create_corpus
 from logger import logger
@@ -14,7 +15,15 @@ from logger import logger
 
 class TestOrchestrator:
 
-    def __init__(self, dataset_name, mode, embedding_manager, single_config_path=None, grid_config_path=None):
+    def __init__(
+        self,
+        dataset_name,
+        mode,
+        embedding_manager,
+        keyword_manager,
+        single_config_path=None,
+        grid_config_path=None,
+    ):
         self._dataset_name = dataset_name
         self._mode = mode
         self._single_config_path = single_config_path
@@ -22,6 +31,7 @@ class TestOrchestrator:
         self._corpus = create_corpus(data_path)
 
         self._embedding_manager = embedding_manager
+        self._keyword_manager = keyword_manager
 
     def orchestrate(self):
         if self._mode == "grid":
@@ -42,9 +52,20 @@ class TestOrchestrator:
         """
         Run a single test with the given configuration.
         """
-        id_mapping, embedding_time, embedding_id = (
-            self._embedding_manager.generate_or_load_embeddings(config, self._corpus)
+        # id_mapping, embedding_time, embedding_id = (
+        #     self._embedding_manager.generate_or_load_embeddings(config, self._corpus)
+        # )
+        # keyword_ranking_model = self._keyword_manager.generate_or_load_keyword_model(
+        #     self._corpus
+        # )
+        cp = CorpusProcessor(
+            self._corpus,
+            config,
+            self._embedding_manager,
+            self._keyword_manager,
+            self._dataset_name
         )
+        id_mapping, embedding_time, embedding_id = cp.process()
 
         test_runner = create_test_runner(
             self._dataset_name,
@@ -53,9 +74,12 @@ class TestOrchestrator:
             embedding_time,
             config,
             self._embedding_manager,
-            embedding_id
+            embedding_id,
+            keyword_ranking_model,
         )
-        logger.info(f"Running test for corpus {self._corpus.dataset_name}, embedding {embedding_id}")
+        logger.info(
+            f"Running test for corpus {self._corpus.dataset_name}, embedding {embedding_id}"
+        )
         test_runner.run_test()
 
     def _load_configs(self):
