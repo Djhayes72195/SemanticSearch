@@ -1,7 +1,7 @@
 import argparse
 from logger import logger
 from TestRunner.test_orchestrator import TestOrchestrator
-from Core.embeddings_manager import EmbeddingsManager
+from Core.embeddings_manager import EmbeddingManager
 from Core.keyword_manager import KeywordManager
 
 
@@ -26,9 +26,7 @@ def main():
     dataset_name = args.dataset_name
     mode = args.mode
 
-    em = EmbeddingsManager(
-        dataset_name=dataset_name
-    )
+    em = EmbeddingManager()
     km = KeywordManager(
         dataset_name=dataset_name
     )

@@ -58,15 +58,29 @@ class TestOrchestrator:
         # keyword_ranking_model = self._keyword_manager.generate_or_load_keyword_model(
         #     self._corpus
         # )
+
         cp = CorpusProcessor(
             self._corpus,
             config,
+            self._dataset_name,
             self._embedding_manager,
-            self._keyword_manager,
-            self._dataset_name
+            self._keyword_manager
         )
-        id_mapping, embedding_time, embedding_id = cp.process()
-
+        processed_data = cp.process()
+        tokenized_chunks = processed_data["tokenized_chunks"]
+        chunk_metadata = processed_data["chunk_metadata"]
+        chunk_id_mapping = processed_data["chunk_id_mapping"]
+        processed_corpus_id = processed_data["processed_corpus_id"]
+        self._embedding_manager.generate_embeddings(
+            tokenized_chunks,
+            processed_corpus_id
+        )
+# {
+#             "tokenized_chunks": tokenized_chunks,
+#             "chunk_metadata": chunk_metadata,
+#             "chunk_id_mapping": chunk_id_mapping,
+#             "processed_corpus_id": processed_corpus_id
+#         }
         test_runner = create_test_runner(
             self._dataset_name,
             self._corpus,
