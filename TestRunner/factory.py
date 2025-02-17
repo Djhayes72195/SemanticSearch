@@ -10,11 +10,8 @@ def create_test_runner(
     dataset_name: str,
     corpus: CorpusData,
     id_mapping: dict,
-    embedding_time: float,
     config,
     embedding_manager,
-    embedding_id,
-    keyword_ranking_model
 ) -> TestRunner:
     """
     Factory function to create a TestRunner instance.
@@ -27,15 +24,17 @@ def create_test_runner(
     Returns:
         TestRunner: An initialized TestRunner instance.
     """
+                # self._dataset_name,
+            # self._corpus,
+            # id_mapping,
+            # config,
+            # self._embedding_manager,
     question_answer = QuestionAnswer(dataset_name)
     return TestRunner(
         dataset_name=dataset_name,
         corpus=corpus,
         id_mapping=id_mapping,
         embedding_manager=embedding_manager,
-        embedding_time=embedding_time,
         config=config,
         qa=question_answer,
-        embedding_id=embedding_id,
-        keyword_ranking_model=keyword_ranking_model
    )

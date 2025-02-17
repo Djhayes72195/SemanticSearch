@@ -22,11 +22,11 @@ class EmbeddingManager:
         annoy_index = AnnoyIndex(embedding_dim, metric)
         return annoy_index
 
-    def save_embeddings(self, processed_data_id):
+    def save_embeddings(self, processed_data_dir, processed_data_id):
         """
         Saves Annoy index to disk, creating the directory if it does not exist.
         """
-        embedding_dir = PATH_TO_EMBEDDINGS_BASE / Path(processed_data_id)
+        embedding_dir = processed_data_dir / Path(processed_data_id)
         embedding_path = embedding_dir / "embeddings.ann"
 
         # Ensure the directory exists

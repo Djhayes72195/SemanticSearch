@@ -52,13 +52,6 @@ class TestOrchestrator:
         """
         Run a single test with the given configuration.
         """
-        # id_mapping, embedding_time, embedding_id = (
-        #     self._embedding_manager.generate_or_load_embeddings(config, self._corpus)
-        # )
-        # keyword_ranking_model = self._keyword_manager.generate_or_load_keyword_model(
-        #     self._corpus
-        # )
-
         cp = CorpusProcessor(
             self._corpus,
             config,
@@ -66,33 +59,17 @@ class TestOrchestrator:
             self._embedding_manager,
             self._keyword_manager
         )
-        processed_data = cp.process()
-        tokenized_chunks = processed_data["tokenized_chunks"]
-        chunk_metadata = processed_data["chunk_metadata"]
-        chunk_id_mapping = processed_data["chunk_id_mapping"]
-        processed_corpus_id = processed_data["processed_corpus_id"]
-        self._embedding_manager.generate_embeddings(
-            tokenized_chunks,
-            processed_corpus_id
-        )
-# {
-#             "tokenized_chunks": tokenized_chunks,
-#             "chunk_metadata": chunk_metadata,
-#             "chunk_id_mapping": chunk_id_mapping,
-#             "processed_corpus_id": processed_corpus_id
-#         }
+        id_mapping = cp.process()
+
         test_runner = create_test_runner(
             self._dataset_name,
             self._corpus,
             id_mapping,
-            embedding_time,
             config,
             self._embedding_manager,
-            embedding_id,
-            keyword_ranking_model,
         )
         logger.info(
-            f"Running test for corpus {self._corpus.dataset_name}, embedding {embedding_id}"
+            f"Running test for corpus {self._corpus.dataset_name}."
         )
         test_runner.run_test()
 
