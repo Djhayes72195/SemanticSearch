@@ -1,19 +1,23 @@
 {
     "splitting_method": [
         "by_sentence",
-        "by_paragraph"
+        "recursive_split"
     ],
     "embedding_model": [
         "all-MiniLM-L6-v2"
     ],
     "annoy_trees": [
-        10,
-        20
+        10
     ], 
     "cleaning_method": [
         "no_cleaning"
     ],
     "split_filtering":[
         "no_filtering"
+    ],
+    "semantic_vs_keyword_weights": [
+        [0.7, 0.3],
+        [0.5, 0.5],
+        [0.3, 0.7]
     ]
 }

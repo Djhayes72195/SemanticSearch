@@ -10,3 +10,6 @@ Embeddings/*
 TestRunner/embedding_hashes.json
 TestRunner/QuestionAnswer/*
 app.log
+RawData/*
+ProcessedData/*
+TestRunner/embedding_hashes.json
