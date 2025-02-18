@@ -1,15 +1,22 @@
 import re
 import json
 from rank_bm25 import BM25Okapi
+import pickle
+import nltk
+from nltk.corpus import stopwords
+import hashlib
 
 from pathlib import Path
 from logger import logger
 from annoy import AnnoyIndex
 from .models import TestMetadata
 import unicodedata
-from .config import TEST_RESULTS_PATH
+from .config import TEST_RESULTS_PATH, PROCESSED_DATA_PATH
 from Core.results_processors import TestingResultProcessor
+from Core.query_runner import QueryRunner
+from Core.ranker import Ranker
 from EmbeddingGeneration.config import PATH_TO_EMBEDDINGS
+from factories.embedding_model_factory import EmbeddingModelFactory
 
 
 class TestRunner:
@@ -18,17 +25,19 @@ class TestRunner:
     provided by the EmbeddingsManager and processing the results.
     """
 
+    #         dataset_name=dataset_name,
+    # corpus=corpus,
+    # id_mapping=id_mapping,
+    # config=config,
+    # embedding_manager=embedding_manager,
+    # qa=question_answer,
     def __init__(
         self,
         dataset_name,
         corpus,
-        id_mapping,
-        embedding_manager,
-        embedding_time,
+        processed_corpus_id,
         config,
         qa,
-        embedding_id,
-        keyword_ranking_model,
         similarity_calculator=None,
     ):
         """
@@ -53,42 +62,34 @@ class TestRunner:
         """
         self._dataset_name = dataset_name
         self._corpus = corpus
-        self._id_mapping = id_mapping
-        self._embedding_manager = embedding_manager
-        self._keyword_ranking_model = keyword_ranking_model
-        self._embedding_time = embedding_time
+        self._processed_corpus_id = processed_corpus_id
+        self._qr = QueryRunner(processed_corpus_id, config)
+        (self._id_mapping, self._metadata) = self._load_resources()
+        self._ranker = Ranker(config, self._id_mapping, self._corpus)
         self._config = config
         self._qa = qa
-        self._embedding_id = embedding_id
 
         self._embedding_dim = 384  # TODO: Extract into config
-        self._annoy_index = self._load_annoy_index()
 
         self._similarity_calculator = similarity_calculator
 
         model_name = config["embedding_model"]
-        self._embedding_model = embedding_manager.embedding_model_factory.get_model(
-            model_name
-        )
-
-        self._metadata = TestMetadata(
-            dataset_name=dataset_name,
-            embedding_model=model_name,
-            splitting_methods=config.get("splitting_method", []),
-            annoy_trees=10,  # TODO: Extract into config
-            embedding_time=embedding_time,
-        )
+        emf = EmbeddingModelFactory()
+        self._embedding_model = emf.get_model(model_name)
 
         self._results_processor = TestingResultProcessor(corpus)
 
-    def _load_annoy_index(self):
-        """
-        Load the Annoy index for similarity search.
-        """
-        index_path = Path(PATH_TO_EMBEDDINGS) / f"{self._embedding_id}.ann"
-        annoy_index = AnnoyIndex(self._embedding_dim, "angular")
-        annoy_index.load(str(index_path))
-        return annoy_index
+    def _load_resources(self):
+        resources_dir = PROCESSED_DATA_PATH / Path(self._processed_corpus_id)
+        id_mapping = self._load_json_resource(resources_dir, "id_mapping")
+        metadata = self._load_json_resource(resources_dir, "metadata")
+        return (id_mapping, metadata)
+
+    def _load_json_resource(self, resources_dir, name):
+        path = resources_dir / Path(f"{name}.json")
+        with open(path, "rb") as f:
+            resource = json.load(f)
+        return resource
 
     def run_test(self):
         """
@@ -108,26 +109,41 @@ class TestRunner:
                 print(f"Skipping test case: Missing query in {test_case}")
                 continue
 
-            # This bit should probably be in its own module
-            embedded_query = self._embedding_model.encode(query, convert_to_tensor=True)
-
-            annoy_output = self._query_documents(embedded_query)
-            top_hits_data = self._extract_top_hits_data(annoy_output)
-            top_hits_data = self._append_keyword_scores(top_hits_data, query)
-            top_hits_data = self._rank_results(top_hits_data)
-            # End bit that should be in its own module.
+            annoy_scores, keyword_scores = self._qr.query(query)
+            ranking_matrix = self._ranker.rank(annoy_scores, keyword_scores)
+            formatted_top_hits = self._format_for_results_processor(ranking_matrix)
 
             processed_results = self._results_processor.process(
-                top_hits_data, query, ground_truth
+                formatted_top_hits, query, ground_truth
             )
             case_by_case_results.append(processed_results)
 
         final_results = {
-            "metadata": self._metadata.to_dict(),
+            "metadata": self._metadata,
             "results": case_by_case_results,
         }
         logger.info("Test complete, writing results.")
         self._write_results(final_results)
+
+    def _format_for_results_processor(self, ranking_matrix):
+        top_hits_ids = list(ranking_matrix["ID"])
+        combined_similarity = list(ranking_matrix["Combined_Score"])
+        semantic_similarity = list(ranking_matrix["Semantic_Score"])
+        keyword_similarity = list(ranking_matrix["Keyword_Score"])
+        top_hits_data = [self._id_mapping[str(id)] for id in top_hits_ids]
+
+        for i, res in enumerate(top_hits_data):
+            res.update({"similarity": combined_similarity[i]})
+            res.update({"semantic_similarity": semantic_similarity[i]})
+            res.update({"keyword_similarity": keyword_similarity[i]})
+            res.update(
+                {
+                    "text": self._corpus.find_passage(
+                        res.get("location"), res.get("char_range")
+                    )
+                }
+            )
+        return top_hits_data
 
     def _rank_results(self, top_hits_data):
         weights = self._config.get("semantic_vs_keyword_weights", [0.5, 0.5])
@@ -148,70 +164,52 @@ class TestRunner:
         ]  # Keep top 10
         return top_hits_data
 
-    def _append_keyword_scores(self, top_hits_data, query):
-        query_tokens = self._tokenize(query)
-        for hit in top_hits_data:
-            keyword_score = self._calculate_keyword_score(query_tokens, hit["text"])
-            hit.update(
-                {"keyword_score": 1 - keyword_score}
-            )  # Invert keyword score to match annoy distance metric
-        return top_hits_data
+    # def _append_keyword_scores(self, top_hits_data, query):
+    #     query_tokens = self._tokenize(query)
+    #     for hit in top_hits_data:
+    #         keyword_score = self._calculate_keyword_score(query_tokens, hit["text"])
+    #         hit.update(
+    #             {"keyword_score": 1 - keyword_score}
+    #         )  # Invert keyword score to match annoy distance metric
+    #     return top_hits_data
 
-    def _calculate_keyword_score(self, query_tokens, hit_text):
-        """
-        Computes the BM25 relevance score for a given passage.
+    # def _calculate_keyword_score(self, query_tokens, hit_text):
+    #     """
+    #     Computes the BM25 relevance score for a given passage.
 
-        Args:
-            query_tokens (list): Tokenized query.
-            hit_text (str): The retrieved text.
+    #     Args:
+    #         query_tokens (list): Tokenized query.
+    #         hit_text (str): The retrieved text.
 
-        Returns:
-            float: BM25 score (higher = more relevant).
-        """
-        passage_tokens = self._tokenize(hit_text)
-        return self._keyword_ranking_model.get_scores(query_tokens)
+    #     Returns:
+    #         float: BM25 score (higher = more relevant).
+    #     """
+    #     passage_tokens = self._tokenize(hit_text)
+    #     return self._keyword_ranking_model.get_scores(query_tokens)
 
+    # def OLD_IMPLEMENTATION_calculate_keyword_score_jaccard(self, query_tokens, passage_text):
+    #     """
+    #     Computes keyword overlap using Jaccard similarity.
 
-    def OLD_IMPLEMENTATION_calculate_keyword_score_jaccard(self, query_tokens, passage_text):
-        """
-        Computes keyword overlap using Jaccard similarity.
+    #     Args:
+    #         query_text (str): The search query.
+    #         passage_text (str): The retrieved text.
 
-        Args:
-            query_text (str): The search query.
-            passage_text (str): The retrieved text.
+    #     Returns:
+    #         float: Jaccard similarity score (0 to 1).
+    #     """
+    #     passage_tokens = self._tokenize(passage_text)
 
-        Returns:
-            float: Jaccard similarity score (0 to 1).
-        """
-        passage_tokens = self._tokenize(passage_text)
+    #     if not query_tokens or not passage_tokens:
+    #         return 0.0
 
-        if not query_tokens or not passage_tokens:
-            return 0.0
-
-        intersection = len(query_tokens & passage_tokens)
-        union = len(query_tokens | passage_tokens)
-        return intersection / union
-
-    def _tokenize(self, text):
-        """
-        Tokenizes and normalizes text (lowercase, removes punctuation).
-
-        Args:
-            text (str): Input text.
-
-        Returns:
-            set: A set of unique words.
-        """
-        text = "".join(
-            c
-            for c in unicodedata.normalize("NFKD", text)
-            if not unicodedata.combining(c)
-        )  # remove accents
-        return set(re.findall(r"\b\w+\b", text.lower()))
+    #     intersection = len(query_tokens & passage_tokens)
+    #     union = len(query_tokens | passage_tokens)
+    #     return intersection / union
 
     def _extract_top_hits_data(self, annoy_output):
         top_hits_ids, similarities = annoy_output[0], annoy_output[1]
-        top_hits_data = [self._id_mapping[id] for id in top_hits_ids]
+        top_hits_data = [self._id_mapping[str(id)] for id in top_hits_ids]
 
         for i, res in enumerate(top_hits_data):
             res.update({"similarity": similarities[i]})
@@ -271,5 +269,29 @@ class TestRunner:
         Path
             The path for saving the results.
         """
-        normalized_name = self._metadata.to_normalized_name()
-        return TEST_RESULTS_PATH / f"{normalized_name}.{extension}"
+        name = self.generate_unique_filename()
+        return TEST_RESULTS_PATH / f"{name}.{extension}"
+
+    def generate_unique_filename(self, prefix="config", extension="json"):
+        """
+        Generate a unique filename from a configuration dictionary.
+
+        Args:
+            config (dict): The configuration dictionary.
+            prefix (str): Prefix for the filename (default: "config").
+            extension (str): File extension (default: "json").
+
+        Returns:
+            str: A unique filename based on the config.
+        """
+        # Convert dictionary to a sorted string
+        config_str = json.dumps(self._config, sort_keys=True, separators=(",", ":"))
+
+        # Hash the string for uniqueness
+        config_hash = hashlib.md5(config_str.encode()).hexdigest()
+
+        # Construct filename
+        filename = f"{prefix}_{config_hash}.{extension}"
+        
+        return filename
+

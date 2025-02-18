@@ -16,6 +16,9 @@ EMBEDDINGS_PATH = Path(
 GRID_SEARCH_CONFIG_PATH = Path(
     "C:\\Users\\Djhay\\OneDrive\\Desktop\\Projects\\Hackathon\\Hackathon\\TestRunner\\grid_search_config.json"
 )
+PROCESSED_DATA_PATH = Path(
+    "C:\\Users\\Djhay\\OneDrive\\Desktop\\Projects\\Hackathon\\Hackathon\\ProcessedData"
+)
 
 
 NON_MUTUALLY_EXCLUSIVE_CONFIGS = [

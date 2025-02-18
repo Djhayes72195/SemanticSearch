@@ -9,9 +9,8 @@ from TestRunner.test_runner import TestRunner
 def create_test_runner(
     dataset_name: str,
     corpus: CorpusData,
-    id_mapping: dict,
+    processed_corpus_id,
     config,
-    embedding_manager,
 ) -> TestRunner:
     """
     Factory function to create a TestRunner instance.
@@ -33,8 +32,15 @@ def create_test_runner(
     return TestRunner(
         dataset_name=dataset_name,
         corpus=corpus,
-        id_mapping=id_mapping,
-        embedding_manager=embedding_manager,
+        processed_corpus_id=processed_corpus_id,
         config=config,
         qa=question_answer,
    )
+
+        # self,
+        # dataset_name,
+        # corpus,
+        # processed_corpus_id,
+        # config,
+        # qa,
+        # similarity_calculator=None,

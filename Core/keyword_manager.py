@@ -2,9 +2,16 @@ import pickle
 import re
 import os
 import unicodedata
+import json
 from pathlib import Path
 from rank_bm25 import BM25Okapi
 import logging
+from Core.tokenizer import Tokenizer
+
+import unicodedata
+import re
+import nltk
+from nltk.corpus import stopwords
 
 
 # Setup logger
@@ -15,27 +22,27 @@ class KeywordManager:
     def __init__(self, dataset_name):
         self._dataset_name = dataset_name
 
-    def save_index(self, tokenized_chunks, processsed_data_dir, processed_corpus_id):
+    def save_index(self, tokenized_chunks, processed_data_dir):
         """
         Creates, loads, or caches a BM25 keyword index for the dataset.
 
         Args:
             tokenized_chunks (list): Tokenized text chunks for BM25.
-            processed_corpus_id (str): Unique identifier for the processed dataset.
 
         Returns:
             BM25Okapi: Precomputed BM25 index.
         """
-        bm25 = BM25Okapi(tokenized_chunks)
-        index_dir = processsed_data_dir / Path(processed_corpus_id)
-        index_path = index_dir / "bm25_index.pkl"
+        testing_dict = {}
+        for i, chunk in enumerate(tokenized_chunks):
+            testing_dict[i] = list(chunk)
+        with open("check_tokenized_chunks.json", "w") as f:
+            json.dump(testing_dict, f, indent=4)
 
-        # Ensure the directory exists
-        os.makedirs(index_dir, exist_ok=True)
+        bm25 = BM25Okapi(tokenized_chunks)
+        index_path = processed_data_dir / "bm25_index.pkl"
 
         with open(index_path, "wb") as f:
             pickle.dump(bm25, f)
             logger.info(f"Saved BM25 index for {self._dataset_name} to {index_path}")
 
         return bm25
-

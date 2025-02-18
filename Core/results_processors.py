@@ -40,12 +40,12 @@ class TestingResultProcessor(ResultProcessor):
 
     def process(
         self,
-        top_hits_data,
+        top_hits,
         query,
         ground_truth,
     ):
         ordered_results, any_metrics = self._evaluate_results(
-            top_hits_data, ground_truth
+            top_hits, ground_truth
         )
         return self._create_results_dict(
             ordered_results, any_metrics, query, ground_truth

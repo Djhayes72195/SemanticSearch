@@ -3,6 +3,7 @@ from logger import logger
 from TestRunner.test_orchestrator import TestOrchestrator
 from Core.embeddings_manager import EmbeddingManager
 from Core.keyword_manager import KeywordManager
+from Core.tokenizer import Tokenizer
 
 
 def main():
@@ -28,7 +29,7 @@ def main():
 
     em = EmbeddingManager()
     km = KeywordManager(
-        dataset_name=dataset_name
+        dataset_name=dataset_name,
     )
     logger.info("Creating Test Orchestrator")
     to = TestOrchestrator(

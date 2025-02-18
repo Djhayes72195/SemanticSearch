@@ -59,15 +59,21 @@ class TestOrchestrator:
             self._embedding_manager,
             self._keyword_manager
         )
-        id_mapping = cp.process()
+        processed_corpus_id = cp.process()
 
         test_runner = create_test_runner(
             self._dataset_name,
             self._corpus,
-            id_mapping,
+            processed_corpus_id,
             config,
-            self._embedding_manager,
         )
+        # self,
+        # dataset_name,
+        # corpus,
+        # processed_corpus_id,
+        # config,
+        # qa,
+        # similarity_calculator=None,
         logger.info(
             f"Running test for corpus {self._corpus.dataset_name}."
         )

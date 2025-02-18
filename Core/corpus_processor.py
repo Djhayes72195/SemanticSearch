@@ -1,10 +1,13 @@
 import json
 import os
+import unicodedata
+import re
 import time
 import hashlib
 from config import PROCESSED_DATA_PATH
 from pathlib import Path
 import spacy
+from Core.tokenizer import Tokenizer
 from EmbeddingGeneration.splitter import TextSplitter
 
 
@@ -17,6 +20,7 @@ class CorpusProcessor:
         self.dataset_name = dataset_name
         self.embedding_manager = embedding_manager
         self.keyword_manager = keyword_manager
+        self._tokenizer = Tokenizer()
 
         # Initialize NLP & text splitter
         self.nlp = spacy.load("en_core_web_sm")
@@ -30,14 +34,11 @@ class CorpusProcessor:
         processed_data_dir = PROCESSED_DATA_PATH / Path(processed_corpus_id)
 
         if self._check_required_files(processed_data_dir):
-            id_mapping_path = processed_data_dir / Path("id_mapping.json")
-            with open(id_mapping_path, "r") as f:
-                id_mapping = json.load(f)
-            return id_mapping
+            return processed_corpus_id
 
-        id_mapping = self._encode_corpus(processed_corpus_id, processed_data_dir)
+        processed_corpus_id = self._encode_corpus(processed_corpus_id, processed_data_dir)
 
-        return id_mapping
+        return processed_corpus_id
 
     def _encode_corpus(self, processed_corpus_id, processed_data_dir):
         tokenized_chunks = []
@@ -56,7 +57,9 @@ class CorpusProcessor:
                 parent_chunk = chunk.get("parent_large_chunk", "")
 
                 # **BM25 Tokenization**
-                tokenized_chunks.append(chunk_text.lower().split())
+                tokenized_chunks.append(
+                    self._tokenizer.tokenize(chunk_text)
+                )
 
                 self.embedding_manager.generate_and_store_embedding(
                     chunk_id_counter, chunk_text
@@ -92,7 +95,7 @@ class CorpusProcessor:
             metadata,
         )
 
-        return id_mapping
+        return processed_corpus_id
 
     def _save_results(
         self,
@@ -104,9 +107,9 @@ class CorpusProcessor:
     ):
         processed_data_dir.mkdir(parents=True, exist_ok=True)
 
-        self.embedding_manager.save_embeddings(processed_data_dir, processed_corpus_id)
+        self.embedding_manager.save_embeddings(processed_data_dir)
         self.keyword_manager.save_index(
-            tokenized_chunks, processed_data_dir, processed_corpus_id
+            tokenized_chunks, processed_data_dir
         )
         self._save_id_mapping(id_mapping, processed_data_dir)
         self._save_metadata(processed_data_dir, metadata)
@@ -118,6 +121,23 @@ class CorpusProcessor:
             json.dump(metadata, f, indent=4)
 
     def _save_id_mapping(self, id_mapping, processed_data_dir):
+        """
+        Save id mapping file
+        
+        id_mapping.json maps the id of a chunk, as stored in bm25
+        and annoy, to critical fields:
+            - Source document location.
+            - Chunk text
+            - splitting method used to generate the chunk
+            - character range, as an integer range
+            - parent chunk range
+                - Range of int if chunk as a parent
+                - None otherwise
+
+        id_mapping.json is associated with annoy and bm25
+        resources according to a unique key. See
+        `generate_processed_data_identifier`.
+        """
         id_mapping_path = processed_data_dir / Path("id_mapping.json")
         with open(id_mapping_path, "w") as f:
             json.dump(id_mapping, f, indent=4)
@@ -125,8 +145,22 @@ class CorpusProcessor:
     def generate_processed_data_identifier(self):
         """
         Generates a unique hashed ID for the processed corpus.
+
+        We use this ID to identify embeddings and keyword indexes
+        associated with a particular dataset and configuration.
+        
+        Only configurations which would require the corpus to
+        be re-processed are included. This allows us to reuse
+        embeddings and keyword indexes across configurations.
+
+        Example:
+            - Changing splitting method requires recomputation of
+            indexes ----> included in ID
+            - Changing semantic vs keyword similarity weights
+            does not require recomputation of indexes
+            ----> not included in ID.
         """
-        key_settings = (
+        key_settings = (  # Only include configs that would require re-processing the corpus
             self.dataset_name,
             self._config["splitting_method"],
             self._config["embedding_model"],
@@ -139,13 +173,11 @@ class CorpusProcessor:
     def _check_required_files(self, directory: str):
         dir_path = Path(directory)
 
-        # Check if directory exists
         if not dir_path.is_dir():
-            return False  # Directory doesn't exist
+            return False
 
         # Required filenames
-        required_files = {"id_mapping.json", "metadata.json", "embeddings.pkl", "bm25_index.pkl"}
+        required_files = {"id_mapping.json", "metadata.json", "embeddings.ann", "bm25_index.pkl"}
         existing_files = {file.name for file in dir_path.iterdir() if file.is_file()}
 
         return required_files.issubset(existing_files) 
-
