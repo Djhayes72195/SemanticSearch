@@ -23,11 +23,6 @@ def create_test_runner(
     Returns:
         TestRunner: An initialized TestRunner instance.
     """
-                # self._dataset_name,
-            # self._corpus,
-            # id_mapping,
-            # config,
-            # self._embedding_manager,
     question_answer = QuestionAnswer(dataset_name)
     return TestRunner(
         dataset_name=dataset_name,
@@ -36,11 +31,3 @@ def create_test_runner(
         config=config,
         qa=question_answer,
    )
-
-        # self,
-        # dataset_name,
-        # corpus,
-        # processed_corpus_id,
-        # config,
-        # qa,
-        # similarity_calculator=None,

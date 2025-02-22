@@ -1,21 +1,13 @@
-import re
 import json
-from rank_bm25 import BM25Okapi
-import pickle
-import nltk
-from nltk.corpus import stopwords
 import hashlib
+import random
 
 from pathlib import Path
 from logger import logger
-from annoy import AnnoyIndex
-from .models import TestMetadata
-import unicodedata
 from .config import TEST_RESULTS_PATH, PROCESSED_DATA_PATH
 from Core.results_processors import TestingResultProcessor
 from Core.query_runner import QueryRunner
 from Core.ranker import Ranker
-from EmbeddingGeneration.config import PATH_TO_EMBEDDINGS
 from factories.embedding_model_factory import EmbeddingModelFactory
 
 
@@ -96,7 +88,8 @@ class TestRunner:
         Execute the tests and save the results.
         """
         case_by_case_results = []
-
+        top_hit_overlaps_count = 0
+        random.shuffle(self._qa.question_answer)  # Shuffle to make debugging more illuminating
         for test_case in self._qa.question_answer:
             query = test_case.get("query", "")
             ground_truth = {
@@ -116,14 +109,17 @@ class TestRunner:
             processed_results = self._results_processor.process(
                 formatted_top_hits, query, ground_truth
             )
+            if processed_results['ordered_results'][0]['overlap']:
+                top_hit_overlaps_count += 1
             case_by_case_results.append(processed_results)
 
+        top_hit_overlap_ratio = top_hit_overlaps_count / len(case_by_case_results)
         final_results = {
             "metadata": self._metadata,
             "results": case_by_case_results,
         }
         logger.info("Test complete, writing results.")
-        self._write_results(final_results)
+        self._write_results(final_results, top_hit_overlap_ratio)
 
     def _format_for_results_processor(self, ranking_matrix):
         top_hits_ids = list(ranking_matrix["ID"])
@@ -164,49 +160,6 @@ class TestRunner:
         ]  # Keep top 10
         return top_hits_data
 
-    # def _append_keyword_scores(self, top_hits_data, query):
-    #     query_tokens = self._tokenize(query)
-    #     for hit in top_hits_data:
-    #         keyword_score = self._calculate_keyword_score(query_tokens, hit["text"])
-    #         hit.update(
-    #             {"keyword_score": 1 - keyword_score}
-    #         )  # Invert keyword score to match annoy distance metric
-    #     return top_hits_data
-
-    # def _calculate_keyword_score(self, query_tokens, hit_text):
-    #     """
-    #     Computes the BM25 relevance score for a given passage.
-
-    #     Args:
-    #         query_tokens (list): Tokenized query.
-    #         hit_text (str): The retrieved text.
-
-    #     Returns:
-    #         float: BM25 score (higher = more relevant).
-    #     """
-    #     passage_tokens = self._tokenize(hit_text)
-    #     return self._keyword_ranking_model.get_scores(query_tokens)
-
-    # def OLD_IMPLEMENTATION_calculate_keyword_score_jaccard(self, query_tokens, passage_text):
-    #     """
-    #     Computes keyword overlap using Jaccard similarity.
-
-    #     Args:
-    #         query_text (str): The search query.
-    #         passage_text (str): The retrieved text.
-
-    #     Returns:
-    #         float: Jaccard similarity score (0 to 1).
-    #     """
-    #     passage_tokens = self._tokenize(passage_text)
-
-    #     if not query_tokens or not passage_tokens:
-    #         return 0.0
-
-    #     intersection = len(query_tokens & passage_tokens)
-    #     union = len(query_tokens | passage_tokens)
-    #     return intersection / union
-
     def _extract_top_hits_data(self, annoy_output):
         top_hits_ids, similarities = annoy_output[0], annoy_output[1]
         top_hits_data = [self._id_mapping[str(id)] for id in top_hits_ids]
@@ -240,7 +193,7 @@ class TestRunner:
             embedded_query, 20, include_distances=True
         )
 
-    def _write_results(self, final_results):
+    def _write_results(self, final_results, top_hit_overlap_ratio):
         """
         Write the test results to a JSON file.
 
@@ -249,13 +202,13 @@ class TestRunner:
         final_results : dict
             The final results dictionary containing metadata and results.
         """
-        file_name = self._generate_test_filepath()
+        file_name = self._generate_test_filepath(top_hit_overlap_ratio)
         file_name.parent.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
         with open(file_name, "w") as json_file:
             json.dump(final_results, json_file, indent=4)
         logger.info(f"Results written to {file_name}")
 
-    def _generate_test_filepath(self, extension="json"):
+    def _generate_test_filepath(self, top_hit_overlap_ratio, extension="json"):
         """
         Generate a file path for saving test results.
 
@@ -269,10 +222,10 @@ class TestRunner:
         Path
             The path for saving the results.
         """
-        name = self.generate_unique_filename()
+        name = self.generate_unique_filename(top_hit_overlap_ratio)
         return TEST_RESULTS_PATH / f"{name}.{extension}"
 
-    def generate_unique_filename(self, prefix="config", extension="json"):
+    def generate_unique_filename(self, top_hit_overlap_ratio, prefix="config"):
         """
         Generate a unique filename from a configuration dictionary.
 
@@ -291,7 +244,7 @@ class TestRunner:
         config_hash = hashlib.md5(config_str.encode()).hexdigest()
 
         # Construct filename
-        filename = f"{prefix}_{config_hash}.{extension}"
+        filename = f"{top_hit_overlap_ratio}_{prefix}_{config_hash}"
         
         return filename
 

@@ -67,13 +67,7 @@ class TestOrchestrator:
             processed_corpus_id,
             config,
         )
-        # self,
-        # dataset_name,
-        # corpus,
-        # processed_corpus_id,
-        # config,
-        # qa,
-        # similarity_calculator=None,
+
         logger.info(
             f"Running test for corpus {self._corpus.dataset_name}."
         )

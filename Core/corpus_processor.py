@@ -13,7 +13,12 @@ from EmbeddingGeneration.splitter import TextSplitter
 
 class CorpusProcessor:
     def __init__(
-        self, corpus, config, dataset_name, embedding_manager, keyword_manager
+        self,
+        corpus,
+        config,
+        dataset_name,
+        embedding_manager,
+        keyword_manager,
     ):
         self._corpus = corpus
         self._config = config
@@ -36,7 +41,9 @@ class CorpusProcessor:
         if self._check_required_files(processed_data_dir):
             return processed_corpus_id
 
-        processed_corpus_id = self._encode_corpus(processed_corpus_id, processed_data_dir)
+        processed_corpus_id = self._encode_corpus(
+            processed_corpus_id, processed_data_dir
+        )
 
         return processed_corpus_id
 
@@ -57,9 +64,7 @@ class CorpusProcessor:
                 parent_chunk = chunk.get("parent_large_chunk", "")
 
                 # **BM25 Tokenization**
-                tokenized_chunks.append(
-                    self._tokenizer.tokenize(chunk_text)
-                )
+                tokenized_chunks.append(self._tokenizer.tokenize(chunk_text))
 
                 self.embedding_manager.generate_and_store_embedding(
                     chunk_id_counter, chunk_text
@@ -108,12 +113,9 @@ class CorpusProcessor:
         processed_data_dir.mkdir(parents=True, exist_ok=True)
 
         self.embedding_manager.save_embeddings(processed_data_dir)
-        self.keyword_manager.save_index(
-            tokenized_chunks, processed_data_dir
-        )
+        self.keyword_manager.save_index(tokenized_chunks, processed_data_dir)
         self._save_id_mapping(id_mapping, processed_data_dir)
         self._save_metadata(processed_data_dir, metadata)
-
 
     def _save_metadata(self, processed_data_dir, metadata):
         metadata_path = processed_data_dir / Path("metadata.json")
@@ -123,7 +125,7 @@ class CorpusProcessor:
     def _save_id_mapping(self, id_mapping, processed_data_dir):
         """
         Save id mapping file
-        
+
         id_mapping.json maps the id of a chunk, as stored in bm25
         and annoy, to critical fields:
             - Source document location.
@@ -148,7 +150,7 @@ class CorpusProcessor:
 
         We use this ID to identify embeddings and keyword indexes
         associated with a particular dataset and configuration.
-        
+
         Only configurations which would require the corpus to
         be re-processed are included. This allows us to reuse
         embeddings and keyword indexes across configurations.
@@ -177,7 +179,12 @@ class CorpusProcessor:
             return False
 
         # Required filenames
-        required_files = {"id_mapping.json", "metadata.json", "embeddings.ann", "bm25_index.pkl"}
+        required_files = {
+            "id_mapping.json",
+            "metadata.json",
+            "embeddings.ann",
+            "bm25_index.pkl",
+        }
         existing_files = {file.name for file in dir_path.iterdir() if file.is_file()}
 
-        return required_files.issubset(existing_files) 
+        return required_files.issubset(existing_files)

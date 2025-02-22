@@ -38,14 +38,3 @@ class EmbeddingManager:
     def generate_and_store_embedding(self, id, split):
         embedding = self._model.encode(split)
         self._annoy_index.add_item(id, embedding)
-
-    # def _extract_split_metadata(self, split, path):
-    #     return {
-    #         "location": str(path),
-    #         "char_range": split["range"],
-    #         "splitting_method": split["method"],
-    #         "parent_chunk_range": (
-    #             split.get("parent_large_chunk").get("range")
-    #             if "parent_large_chunk" in split else None
-    #         )
-    #     }  # This is where I should add parent chunk info
