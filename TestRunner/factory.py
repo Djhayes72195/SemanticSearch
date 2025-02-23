@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from .models import QuestionAnswer
-from Models.models import CorpusData
+from Core.corpus_data import CorpusData
 from TestRunner.test_runner import TestRunner
 
 

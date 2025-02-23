@@ -1,5 +1,5 @@
 from pathlib import Path
-from Models.models import CorpusData
+from Core.corpus_data import CorpusData
 
 def create_corpus(data_path: str) -> CorpusData:
     """Factory method for Corpus class"""

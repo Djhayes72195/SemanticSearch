@@ -1,4 +1,4 @@
-from Models.models import CorpusData
+from Core.corpus_data import CorpusData
 from .embedding_model_factory import EmbeddingModelFactory
 from EmbeddingGeneration.generate_embeddings import EmbeddingGenerator
 from EmbeddingGeneration.splitter import TextSplitter

@@ -20,9 +20,14 @@ class TextSplitter:
             # Here are the steps that make semantic chunking work:
 
 # Break up the document into sentences.
-# Create sentence groups: for each sentence, create a group containing some sentences before and after the given sentence. The group is essentially “anchored” by the sentence use to create it. You can decide the specific numbers before or after to include in each group - but all sentences in a group will be associated with one “anchor” sentence.
+# Create sentence groups: for each sentence, create a group containing some sentences before and after the given sentence.
+# The group is essentially “anchored” by the sentence use to create it. You can decide the specific numbers before or
+# after to include in each group - but all sentences in a group will be associated with one “anchor” sentence.
 # Generate embeddings for each sentence group and associate them with their “anchor” sentence.
-# Compare distances between each group sequentially: When you look at the sentences in the document sequentially, as long as the topic or theme is the same - the distance between the sentence group embedding for a given sentence and the sentence group preceding it will be low. On the other hand, higher semantic distance indicates that the theme or topic has changed. This can effectively delineate one chunk from the next.
+# Compare distances between each group sequentially: When you look at the sentences in the document sequentially,
+# as long as the topic or theme is the same - the distance between the sentence group embedding for a given sentence
+# and the sentence group preceding it will be low. On the other hand, higher semantic distance indicates
+# that the theme or topic has changed. This can effectively delineate one chunk from the next.
         }
 
     def _create_md_splitter(self):

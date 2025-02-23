@@ -19,6 +19,7 @@ class CorpusProcessor:
         dataset_name,
         embedding_manager,
         keyword_manager,
+        testing=True
     ):
         self._corpus = corpus
         self._config = config
@@ -33,8 +34,10 @@ class CorpusProcessor:
             methods=config["splitting_method"], nlp=self.nlp
         )
 
+        self._testing = testing  # Determines how embeddings are saved.
+
     def process(self):
-        """ """
+        """"""
         processed_corpus_id = self.generate_processed_data_identifier()
         processed_data_dir = PROCESSED_DATA_PATH / Path(processed_corpus_id)
 
