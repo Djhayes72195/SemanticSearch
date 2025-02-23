@@ -7,16 +7,10 @@ def main():
     """
     parser = argparse.ArgumentParser(description="Semantic Search CLI")
     parser.add_argument("--query", type=str, required=True, help="Enter a search query.")
-    parser.add_argument("--dataset-name", type=str, required=True, help="Dataset name for indexing.")
-    parser.add_argument("--corpus-id", type=str, required=True, help="Processed corpus ID.")
     args = parser.parse_args()
 
     # Initialize SearchOrchestrator
-    orchestrator = SearchOrchestrator(
-        dataset_name=args.dataset_name,
-        processed_corpus_id=args.corpus_id,
-        config={}
-    )
+    orchestrator = SearchOrchestrator()
 
     # Execute search
     results = orchestrator.search(args.query)

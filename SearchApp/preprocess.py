@@ -1,13 +1,17 @@
 import argparse
+from pathlib import Path
+from SearchApp.config import DEFAULT_DATA_DIR
 from Core.corpus_processor import CorpusProcessor
 from Core.embeddings_manager import EmbeddingManager
 from Core.keyword_manager import KeywordManager
 from Core.corpus_data import CorpusData
 
-DEFAULT_DATA_DIR = "TestData/SQuAD"
 
 def preprocess(data_dir=DEFAULT_DATA_DIR):
     print(f"🚀 Preprocessing data from: {data_dir}")
+
+    if not isinstance(data_dir, Path):
+        data_dir = Path(data_dir)
 
     corpus = CorpusData(data_dir)
 
@@ -30,8 +34,8 @@ def preprocess(data_dir=DEFAULT_DATA_DIR):
         testing=False
     )
 
-    processed_corpus_id = corpus_processor.process()
-    print(f"Processing complete! Corpus ID: {processed_corpus_id}")
+    corpus_processor.process()
+    print(f"Processing complete! Corpus is ready to query.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Preprocess markdown files into embeddings.")

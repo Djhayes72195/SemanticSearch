@@ -1,9 +1,5 @@
-import time
-import os
-from logger import logger
 from annoy import AnnoyIndex
 from pathlib import Path
-from tqdm import tqdm
 from factories.embedding_model_factory import EmbeddingModelFactory
 
 PATH_TO_EMBEDDINGS_BASE = Path(

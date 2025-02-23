@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from SearchApp.config import DEFAULT_DATA_DIR
 from Core.query_runner import QueryRunner
 from Core.ranker import Ranker
 from Core.corpus_data import CorpusData
@@ -16,18 +17,17 @@ class SearchOrchestrator:
     - Ranking and formatting results
     """
 
-    def __init__(self, dataset_name, processed_corpus_id, config):
+    def __init__(self):
         logger.info(f"Initializing SearchOrchestrator with dataset: {dataset_name}")
 
-        self.dataset_name = dataset_name
-        self.processed_corpus_id = processed_corpus_id
-        self.config = config
+        # self.dataset_name = dataset_name
+        # self.processed_corpus_id = processed_corpus_id
+        # self.config = config
+        # TODO: Figure out how to init Search Orchestrator with what it actually needs in prod.
+        self.corpus = CorpusData(DEFAULT_DATA_DIR)
 
-        path = Path(f"TestData/SQuAD") 
-        self.corpus = CorpusData(path)
-
-        self.query_runner = QueryRunner(processed_corpus_id, config)
-        self.ranker = Ranker(config, corpus=self.corpus)
+        # self.query_runner = QueryRunner(processed_corpus_id, config)
+        # self.ranker = Ranker(config, corpus=self.corpus)
 
     def search(self, query):
         """
