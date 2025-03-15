@@ -32,6 +32,8 @@ class KeywordManager:
         Returns:
             BM25Okapi: Precomputed BM25 index.
         """
+
+        # Just so we can see what went into bm25
         testing_dict = {}
         for i, chunk in enumerate(tokenized_chunks):
             testing_dict[i] = list(chunk)

@@ -26,7 +26,7 @@ class CorpusProcessor:
         # Initialize NLP & text splitter
         self.nlp = spacy.load("en_core_web_sm")
         self.text_splitter = TextSplitter(
-            methods=config["splitting_method"], nlp=self.nlp
+            methods=config["split_methods"], nlp=self.nlp
         )
 
         if testing:
@@ -67,7 +67,12 @@ class CorpusProcessor:
                     "splitting_method": chunk["method"]
                 }
 
-                tokenized_chunks.append(chunk_text)
+                # Tokenized chunks will be used to create bm25 index downstream
+                tokenized_chunk = self._tokenizer.tokenize(
+                    chunk_text
+                )
+                tokenized_chunks.append(tokenized_chunk)
+
                 chunk_id_counter += 1
 
         end_time = time.perf_counter()

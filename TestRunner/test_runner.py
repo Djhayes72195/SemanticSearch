@@ -57,7 +57,7 @@ class TestRunner:
         self._processed_corpus_id = processed_corpus_id
         self._qr = QueryRunner(processed_corpus_id, config)
         (self._id_mapping, self._metadata) = self._load_resources()
-        self._ranker = Ranker(config, self._id_mapping, self._corpus)
+        self._ranker = Ranker(config)
         self._config = config
         self._qa = qa
 

@@ -1,6 +1,8 @@
 import argparse
 from pathlib import Path
-from SearchApp.config import DEFAULT_DATA_DIR
+import importlib.resources
+import json
+from SearchApp.constants import DEFAULT_DATA_DIR
 from Core.corpus_processor import CorpusProcessor
 from Core.embeddings_manager import EmbeddingManager
 from Core.keyword_manager import KeywordManager
@@ -8,7 +10,7 @@ from Core.corpus_data import CorpusData
 
 
 def preprocess(data_dir=DEFAULT_DATA_DIR):
-    print(f"🚀 Preprocessing data from: {data_dir}")
+    print(f"Preprocessing data from: {data_dir}")
 
     if not isinstance(data_dir, Path):
         data_dir = Path(data_dir)
@@ -18,16 +20,12 @@ def preprocess(data_dir=DEFAULT_DATA_DIR):
     embedding_manager = EmbeddingManager()
     keyword_manager = KeywordManager(dataset_name=corpus.dataset_name)
 
-    config = {
-        "splitting_method": ["recursive_split"],
-        "embedding_model": "all-MiniLM-L6-v2",
-        "cleaning_method": ["no_cleaning"],
-        "split_filtering": ["no_filtering"],
-    }
+    with importlib.resources.files(__package__).joinpath("production_config.json").open("r") as f:
+        production_config = json.load(f)
 
     corpus_processor = CorpusProcessor(
         corpus=corpus,
-        config=config,
+        config=production_config,
         dataset_name=corpus.dataset_name,
         embedding_manager=embedding_manager,
         keyword_manager=keyword_manager,

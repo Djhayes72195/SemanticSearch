@@ -1,3 +1,8 @@
+- Top TODO (for now): Go ahead and work on deployment, even though there is plenty of retrieval work to do.
+Getting an actual app to play with early will help with core logic decision making.
+
+
+
 - Create multi-granularity approach: we want both big chunks for more general queries and smaller chunks for more specific ones.
 - Make it so that we can encode the answer according to our training data and compare similarity between ground truth answer and the query under test.
     - Critical for determining if the problem is our chunking system or embedding quality.

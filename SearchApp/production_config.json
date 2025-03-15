@@ -1,0 +1,12 @@
+{
+    "data_path": "C:\\Users\\Djhay\\OneDrive\\Desktop\\Projects\\Hackathon\\Hackathon\\TestData\\Mitosis",
+    "split_methods": [
+        "by_sentence",
+        "by_paragraph"
+    ],
+    "embedding_model": "all-MiniLM-L6-v2",
+    "annoy_trees": 10, 
+    "cleaning_methods": "no_cleaning",
+    "split_filtering": "no_filtering",
+    "semantic_vs_keyword_weights": [0.7, 0.3]
+}

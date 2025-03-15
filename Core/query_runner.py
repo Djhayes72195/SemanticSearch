@@ -14,8 +14,8 @@ class QueryRunner:
             self._annoy_index,
             self._keyword_index
          ) = self._load_resources(processed_data_id)
-        self._config = config
         self._tokenizer = Tokenizer()
+
         embedding_model_name = config["embedding_model"]
         emf = EmbeddingModelFactory()
         self._embedding_model = emf.get_model(embedding_model_name)
@@ -39,7 +39,7 @@ class QueryRunner:
     def _query_annoy(self, query):
         embedded_query = self._embedding_model.encode(query, convert_to_tensor=True)
         raw_results = self._annoy_index.get_nns_by_vector(
-                    embedded_query, 20, include_distances=True
+                    embedded_query, 5, include_distances=True
                 )
         return raw_results
 
@@ -50,9 +50,9 @@ class QueryRunner:
         raw_results = self._keyword_index.get_scores(tokenized_query)
 
         # format to better match annoy output
-        top_20_indices = np.argsort(raw_results)[-20:][::-1]  # TODO: Extract top k to config
-        top_20_values = raw_results[top_20_indices]
-        return (top_20_indices.tolist(), top_20_values.tolist())
+        top_indices = np.argsort(raw_results)[-5:][::-1]  # TODO: Extract top k to config
+        top_values = raw_results[top_indices]
+        return (top_indices.tolist(), top_values.tolist())
 
 
     def _query_documents_keyword(self, query):

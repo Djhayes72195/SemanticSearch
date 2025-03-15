@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from SearchApp.config import DEFAULT_DATA_DIR
+from SearchApp.constants import DEFAULT_DATA_DIR
 from Core.query_runner import QueryRunner
 from Core.ranker import Ranker
 from Core.corpus_data import CorpusData
@@ -17,17 +17,14 @@ class SearchOrchestrator:
     - Ranking and formatting results
     """
 
-    def __init__(self):
-        logger.info(f"Initializing SearchOrchestrator with dataset: {dataset_name}")
+    def __init__(self, config, id_mapping):
+        logger.info(f"Initializing SearchOrchestrator")
 
-        # self.dataset_name = dataset_name
-        # self.processed_corpus_id = processed_corpus_id
-        # self.config = config
-        # TODO: Figure out how to init Search Orchestrator with what it actually needs in prod.
         self.corpus = CorpusData(DEFAULT_DATA_DIR)
+        self._id_mapping = id_mapping
 
-        # self.query_runner = QueryRunner(processed_corpus_id, config)
-        # self.ranker = Ranker(config, corpus=self.corpus)
+        self.query_runner = QueryRunner("Production", config)
+        self.ranker = Ranker(config)
 
     def search(self, query):
         """
@@ -62,14 +59,16 @@ class SearchOrchestrator:
         top_hits_ids = list(ranking_matrix["ID"])
         combined_similarity = list(ranking_matrix["Combined_Score"])
 
-        top_hits_data = [self.corpus.find_passage(self.corpus.data[id], None) for id in top_hits_ids]
+        top_hits = [self._id_mapping[str(x)] for x in top_hits_ids]
 
         results = []
-        for i, text in enumerate(top_hits_data):
+        for i, hit in enumerate(top_hits):
             results.append({
                 "rank": i + 1,
-                "text": text,
-                "score": combined_similarity[i]
+                "text": hit["text"],
+                "score": combined_similarity[i],
+                "file": hit["location"],
+                "char_range": hit["char_range"]
             })
 
         return results

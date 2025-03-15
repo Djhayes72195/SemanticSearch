@@ -3,10 +3,8 @@ import pandas as pd
 
 class Ranker:
 
-    def __init__(self, config, id_mapping, corpus):
+    def __init__(self, config):
         self._config = config
-        self._id_mapping = id_mapping
-        self._corpus = corpus
 
         weights = self._config["semantic_vs_keyword_weights"]
         self._semantic_weight = weights[0]
