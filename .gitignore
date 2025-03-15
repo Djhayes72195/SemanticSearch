@@ -13,3 +13,4 @@ app.log
 RawData/*
 ProcessedData/*
 TestRunner/embedding_hashes.json
+prodmirrorvenv/
