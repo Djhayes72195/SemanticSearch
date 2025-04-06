@@ -15,7 +15,7 @@ class Tokenizer:
         obj.__dict__ = cls._shared_state  # Share state across instances
         return obj
 
-    def __init__(self, remove_stopwords=True, use_stemming=True, use_lemmatization=True):
+    def __init__(self, remove_stopwords=True, use_stemming=False, use_lemmatization=True):
         if not hasattr(self, "initialized"):  # Ensure it only runs once
             self.remove_stopwords = remove_stopwords
             self.use_stemming = use_stemming
