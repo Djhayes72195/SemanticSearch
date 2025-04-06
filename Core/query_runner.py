@@ -61,8 +61,20 @@ class QueryRunner:
         return keyword_results
 
     def _load_resources(self, processed_data_id):
-        resources_dir = PROCESSED_DATA_PATH / Path(
-            processed_data_id
+        """
+        Load annoy and bm25 index
+        
+        In production 
+        """
+        resources_dir = (
+            (
+            PROCESSED_DATA_PATH / Path("Testing")
+            / Path(
+                processed_data_id
+            )
+            ) if processed_data_id is not None else (
+                PROCESSED_DATA_PATH / Path("Production")
+            )
         )
         annoy_index = self._load_annoy_index(resources_dir)
         keyword_index = self._load_keyword_index(resources_dir)

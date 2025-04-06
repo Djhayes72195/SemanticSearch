@@ -23,7 +23,6 @@ class CorpusProcessor:
         self.testing = testing
 
         self._tokenizer = Tokenizer()
-        # Initialize NLP & text splitter
         self.nlp = spacy.load("en_core_web_sm")
         self.text_splitter = TextSplitter(
             methods=config["split_methods"], nlp=self.nlp
@@ -103,6 +102,6 @@ class CorpusProcessor:
 
     def generate_processed_data_identifier(self):
         """Generates a unique identifier for the processed corpus (for testing mode)."""
-        key_settings = (self.dataset_name, self._config["splitting_method"], self._config["embedding_model"])
+        key_settings = (self.dataset_name, self._config["split_methods"], self._config["embedding_model"])
         unique_string = "__".join(map(str, key_settings))
         return hashlib.md5(unique_string.encode()).hexdigest()

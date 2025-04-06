@@ -16,13 +16,6 @@ class TestRunner:
     TestRunner is responsible for executing tests using embeddings and configurations
     provided by the EmbeddingsManager and processing the results.
     """
-
-    #         dataset_name=dataset_name,
-    # corpus=corpus,
-    # id_mapping=id_mapping,
-    # config=config,
-    # embedding_manager=embedding_manager,
-    # qa=question_answer,
     def __init__(
         self,
         dataset_name,
@@ -72,7 +65,16 @@ class TestRunner:
         self._results_processor = TestingResultProcessor(corpus)
 
     def _load_resources(self):
-        resources_dir = PROCESSED_DATA_PATH / Path(self._processed_corpus_id)
+        resources_dir = (
+            (
+            PROCESSED_DATA_PATH / Path("Testing")
+            / Path(
+                self._processed_corpus_id
+            )
+            ) if self._processed_corpus_id is not None else (
+                PROCESSED_DATA_PATH / Path("Production")
+            )
+        )
         id_mapping = self._load_json_resource(resources_dir, "id_mapping")
         metadata = self._load_json_resource(resources_dir, "metadata")
         return (id_mapping, metadata)

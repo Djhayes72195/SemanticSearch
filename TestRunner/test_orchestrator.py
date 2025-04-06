@@ -57,7 +57,8 @@ class TestOrchestrator:
             config,
             self._dataset_name,
             self._embedding_manager,
-            self._keyword_manager
+            self._keyword_manager,
+            testing=True
         )
         processed_corpus_id = cp.process()
 

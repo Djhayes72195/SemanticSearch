@@ -1,6 +1,5 @@
 {
-    "splitting_method": [
-        "by_sentence",
+    "split_methods": [
         "recursive_split"
     ],
     "embedding_model": [
@@ -16,8 +15,6 @@
         "no_filtering"
     ],
     "semantic_vs_keyword_weights": [
-        [0.7, 0.3],
-        [0.5, 0.5],
-        [0.3, 0.7]
+        [0.7, 0.3]
     ]
 }

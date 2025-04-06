@@ -6,7 +6,7 @@ from .config import HEADERS_TO_SPLIT_ON, RECURSIVE_SPLITTER_CONFIG
 
 class TextSplitter:
     def __init__(self, methods: list, nlp):
-        self._methods = methods
+        self._methods = methods if isinstance(methods, list) else [methods]
         self._nlp = nlp
         self._markdown_splitter = self._create_md_splitter()
         self._recursive_splitters = self._create_recursive_splitters()
@@ -149,7 +149,7 @@ class TextSplitter:
                     "range": large_range,
                     "granularity": "large"
                 }
-                all_splits.append(large_chunk_entry)  # ✅ Store large chunk
+                all_splits.append(large_chunk_entry)
 
                 large_start = large_range[0]  # Offset for small chunk ranges
                 for small_splitter in self._recursive_splitters["small"]:

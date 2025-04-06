@@ -1,14 +1,23 @@
 from fastapi import FastAPI
 from SearchApp.search_orchestrator import SearchOrchestrator
+from SearchApp.constants import PROCESSED_DATA_DIR
+import json
+from pathlib import Path
+import importlib.resources
 
 app = FastAPI()
-orchestrator = SearchOrchestrator(dataset_name="SQuAD", processed_corpus_id="some_id", config={})
+
+# Load config and id mapping here
+id_mapping_path = PROCESSED_DATA_DIR / Path("id_mapping.json")
+with open(id_mapping_path, "r") as f:
+    id_mapping = json.load(f)
+
+with importlib.resources.files("SearchApp").joinpath("production_config.json").open("r") as f:
+    production_config = json.load(f)
+
+orchestrator = SearchOrchestrator(config=production_config, id_mapping=id_mapping)
 
 @app.get("/search")
 def search(query: str):
     results = orchestrator.search(query)
     return {"query": query, "results": results[:5]}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
