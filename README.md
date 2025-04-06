@@ -9,7 +9,6 @@ A lightweight semantic search engine for context-aware querying over a user-supp
 
 
 
-
 ### Motivation
 
 This search engine was built for:
