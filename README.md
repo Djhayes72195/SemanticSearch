@@ -44,7 +44,6 @@ This subset includes articles on:
 You can replace this dataset with your own Markdown documents. Just place your files in a folder inside `TestData/`, and adjust the paths used in the commands above.
 
 
-
 ### Motivation
 
 This search engine was built for:

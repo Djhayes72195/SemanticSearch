@@ -67,11 +67,11 @@ class QueryRunner:
         In production 
         """
         resources_dir = (
-            (
-            PROCESSED_DATA_PATH / Path("Testing")
-            / Path(
-                processed_data_id
-            )
+                (
+                PROCESSED_DATA_PATH / Path("Testing")
+                / Path(
+                    processed_data_id
+                )
             ) if processed_data_id is not None else (
                 PROCESSED_DATA_PATH / Path("Production")
             )

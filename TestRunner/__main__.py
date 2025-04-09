@@ -3,7 +3,6 @@ from logger import logger
 from TestRunner.test_orchestrator import TestOrchestrator
 from Core.embeddings_manager import EmbeddingManager
 from Core.keyword_manager import KeywordManager
-from Core.tokenizer import Tokenizer
 
 
 def main():

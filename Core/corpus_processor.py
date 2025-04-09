@@ -10,7 +10,7 @@ from config import PROCESSED_DATA_PATH
 from pathlib import Path
 import spacy
 from Core.tokenizer import Tokenizer
-from EmbeddingGeneration.splitter import TextSplitter
+from Core.splitter import TextSplitter
 
 
 class CorpusProcessor:

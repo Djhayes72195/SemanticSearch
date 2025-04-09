@@ -1,5 +1,9 @@
 {
     "9cf748a24f32162a415f3e4320b08fb2": "Mitosis__['by_sentence']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']",
     "ecb71c598dfa8cf1f478ef841dfb783b": "Mitosis__['by_paragraph']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']",
-    "dc31707ea601b33f7bb2d37f1f52be38": "Mitosis__['by_sentence', 'by_paragraph']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']"
+    "dc31707ea601b33f7bb2d37f1f52be38": "Mitosis__['by_sentence', 'by_paragraph']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']",
+    "fa2a00e66f25981cbc9c54c477b2de0e": "SQuAD__['by_sentence']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']",
+    "6d5f70f72562f318f8627e272984df53": "SQuAD__['markdown_split']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']",
+    "0f10f9a2997f9057fa2eeff0e94ab50f": "SQuAD__['recursive_split']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']",
+    "f3dab22eacb6d1dd4a273821a9b0b832": "SQuAD__['by_sentence', 'recursive_split']__all-MiniLM-L6-v2__['no_cleaning']__['no_filtering']"
 }

@@ -1,4 +1,4 @@
-from .config import QUESTION_ANSWER_PATH
+from path_utils import QUESTION_ANSWER_PATH
 import json
 from dataclasses import dataclass
 
@@ -13,10 +13,6 @@ class QuestionAnswer:
     The testing suite will evaluate the success of the run
     based on how well the answers to a given question are
     retrieved.
-
-    Expected JSON Format
-    --------------------
-    TODO: Add to docs once finalized.
     """
 
     def __init__(self, dataset_name: str):

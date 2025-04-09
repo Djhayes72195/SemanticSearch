@@ -1,6 +1,3 @@
-# TestRunner/factory.py
-
-from pathlib import Path
 from .models import QuestionAnswer
 from Core.corpus_data import CorpusData
 from TestRunner.test_runner import TestRunner

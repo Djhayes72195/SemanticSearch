@@ -3,7 +3,7 @@ import json
 import textwrap
 from pathlib import Path
 import importlib.resources
-from SearchApp.constants import PROCESSED_DATA_DIR
+from path_utils import PROCESSED_DATA_PATH
 from SearchApp.search_orchestrator import SearchOrchestrator
 
 def main():
@@ -15,7 +15,7 @@ def main():
     args = parser.parse_args()
 
 
-    id_mapping_path = PROCESSED_DATA_DIR / Path("id_mapping.json")
+    id_mapping_path = PROCESSED_DATA_PATH / "Production" / "id_mapping.json"
     with open(id_mapping_path, "r") as f:
         id_mapping = json.load(f)
 

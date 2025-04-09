@@ -1,6 +1,5 @@
 import logging
-from pathlib import Path
-from SearchApp.constants import DEFAULT_DATA_DIR
+from path_utils import DEFAULT_DATA_PATH
 from Core.query_runner import QueryRunner
 from Core.ranker import Ranker
 from Core.corpus_data import CorpusData
@@ -20,7 +19,7 @@ class SearchOrchestrator:
     def __init__(self, config, id_mapping):
         logger.info(f"Initializing SearchOrchestrator")
 
-        self.corpus = CorpusData(DEFAULT_DATA_DIR)
+        self.corpus = CorpusData(DEFAULT_DATA_PATH)
         self._id_mapping = id_mapping
 
         self.query_runner = QueryRunner("Production", config)
