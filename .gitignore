@@ -1,4 +1,5 @@
-TestData/
+TestData/GrantWork
+TestData/Mitosis
 venv/
 .DS_Store
 *.pyc
