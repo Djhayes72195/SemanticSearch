@@ -1,6 +1,4 @@
-# README
-
-### Local Semantic Search Engine
+# Local Semantic Search Engine
 
 A lightweight semantic search engine for context-aware querying over a user-supplied Markdown corpus. Everything is self-contained — no external APIs, cloud dependencies, or hosting required.
 
