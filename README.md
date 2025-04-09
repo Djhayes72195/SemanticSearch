@@ -5,6 +5,43 @@ A lightweight semantic search engine for context-aware querying over a user-supp
 
 ### Installation
 
+I'm currently working on creating a Docker image for easy distribution.
+
+In the meantime, you can run the system locally:
+
+1. Clone the repo.
+```
+git clone https://github.com/Djhayes72195/SemanticSearch.git
+```
+
+2. Install requirements.
+```
+pip install -r prod-requirements.txt
+```
+
+3. To embed and build bm25 index for SQuAD data.
+```
+python -m SearchApp.preprocess --data-dir TestData/SQuAD
+```
+
+4. To query SQuAD data.
+```
+python -m SearchApp.run_search --query <your-query>
+```
+
+### Notes on the SQuAD Corpus
+
+The default dataset included in this repository is a subset of the [SQuAD](https://rajpurkar.github.io/SQuAD-explorer/) benchmark, consisting of Wikipedia articles. It's included to let you try the search system out-of-the-box.
+
+This subset includes articles on:
+
+- Beyoncé  
+- Frédéric Chopin  
+- The iPod  
+- The Legend of Zelda: Twilight Princess  
+- Sino–Tibetan relations during the Ming dynasty
+
+You can replace this dataset with your own Markdown documents. Just place your files in a folder inside `TestData/`, and adjust the paths used in the commands above.
 
 
 
@@ -32,7 +69,7 @@ This project was built with:
 
 ---
 
-### ⚙️ In Progress (as of 2025-04-05)
+### In Progress (as of 2025-04-05)
 
 - **FastAPI** – Adding API interface for querying, embedding, and scoring workflows.
 
