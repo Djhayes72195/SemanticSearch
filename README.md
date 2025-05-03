@@ -2,6 +2,28 @@
 
 A lightweight semantic search engine for context-aware querying over a user-supplied Markdown corpus. Everything is self-contained — no external APIs, cloud dependencies, or hosting required.
 
+### Motivation
+
+This search engine was built for:
+- Students/Professionals who want a smarter way to search their personal notes when Ctrl+F doesn't cut it.
+- Organizations who want to make their internal documentation more searchable.
+
+### Technologies
+
+This project was built with:
+
+- **Annoy** – A local-first vector index for fast approximate nearest neighbor search. Used to store and retrieve document embeddings efficiently.
+
+- **BM25 (via `rank_bm25`)** – An information retrieval algorithm that builds an index over tokenized document chunks. Scores results based on term frequency, inverse document frequency, and document length normalization.
+
+- **SentenceTransformers** –  Provides pre-trained models that generate dense vector embeddings from document chunks and queries, encoding their semantic meaning.
+
+- **spaCy / NLTK** – Used for basic NLP tasks such as tokenization, stopword removal, and sentence-level chunking.
+
+- **LangChain** – Utilized for its recursive chunking utility to generate semantically coherent text segments.
+
+- **NumPy / Pandas** – Used for vector math and intermediate data handling during preprocessing and scoring.
+
 
 ### Installation
 
@@ -42,29 +64,6 @@ This subset includes articles on:
 - Sino–Tibetan relations during the Ming dynasty
 
 You can replace this dataset with your own Markdown documents. Just place your files in a folder inside `TestData/`, and adjust the paths used in the commands above.
-
-
-### Motivation
-
-This search engine was built for:
-- Students/Professionals who want a smarter way to search their personal notes when Ctrl+F doesn't cut it.
-- Organizations who want to make their internal documentation more searchable.
-
-### Technologies
-
-This project was built with:
-
-- **Annoy** – A local-first vector index for fast approximate nearest neighbor search. Used to store and retrieve document embeddings efficiently.
-
-- **BM25 (via `rank_bm25`)** – An information retrieval algorithm that builds an index over tokenized document chunks. Scores results based on term frequency, inverse document frequency, and document length normalization.
-
-- **SentenceTransformers** –  Provides pre-trained models that generate dense vector embeddings from document chunks and queries, encoding their semantic meaning.
-
-- **spaCy / NLTK** – Used for basic NLP tasks such as tokenization, stopword removal, and sentence-level chunking.
-
-- **LangChain** – Utilized for its recursive chunking utility to generate semantically coherent text segments.
-
-- **NumPy / Pandas** – Used for vector math and intermediate data handling during preprocessing and scoring.
 
 ---
 
